@@ -54,16 +54,47 @@
                                <strong>{{ key.filesize }}</strong>
                            </td>
 
-                           <td>
+                           <td class="tinypng-buttons">
                             <div class="btn-group">
                                 <button class="btn btn-default btn-sm tinyPNG-optimize"
                                 data-imagePath="{{ key.imagePath }}">
                                     optimize image
                                 </button>
-                                <button  class="btn btn-default btn-sm" data-toggle="modal" data-target="#{{ loop.index }}-renameModal">
-                                    Optimize &amp; Rename
+                                <button class="btn btn-default btn-sm dropdown-toggle tinyPNG-dropdown"
+                                        data-toggle="dropdown"
+                                        aria-haspopup="true"
+                                        aria-expanded="false">
+                                    <span class="caret"></span>
+                                    <span class="sr-only">Toggle Dropdown</span>
                                 </button>
+                                <ul class="dropdown-menu">
+                                    <li>
+                                        <a class="tnypng-copy" href="#"
+                                           data-imagePath="{{ key.imagePath }}"
+                                           data-optiparam="copyright">Preserve Copyright</a>
+                                    </li>
+                                    <li>
+                                        <a class="tnypng-create" href="#"
+                                           data-imagePath="{{ key.imagePath }}"
+                                           data-optiparam="creation" >Preserve Creation</a>
+                                    </li>
+                                    <li>
+                                        <a class="tnypng-location" href="#"
+                                           data-imagePath="{{ key.imagePath }}"
+                                           data-optiparam="location">Preserve Location</a>
+                                    </li>
+                                    <li>
+                                        <a href="#"
+                                           data-imagePath="{{ key.imagePath }}"
+                                           data-optiparam="all">Preserve All Three (3)</a>
+                                    </li>
+                                </ul>
                             </div>
+                               <div class="btn-group">
+                                   <button  class="btn btn-default btn-sm" data-toggle="modal" data-target="#{{ loop.index }}-renameModal">
+                                       Optimize &amp; Rename
+                                   </button>
+                               </div>
                                <!-- Modal -->
                                <div class="modal fade" id="{{ loop.index }}-renameModal" tabindex="-1" role="dialog"
                                     aria-labelledby="{{ loop.index }}-modal-label">
