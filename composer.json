@@ -1,0 +1,47 @@
+{
+    "name": "cdowdy/tinypng",
+    "description": "A Bolt Extension Using TinyPNG to optimize your images",
+    "type": "bolt-extension",
+    "keywords": [
+        "image optimization",
+        "tinypng",
+        "PNG optimizer",
+        "JPG optimizer",
+        "web performance"
+    ],
+    "require": {
+        "bolt/bolt": "^3.0"
+    },
+    "require-dev": {
+        "phpunit/phpunit": "^4.7",
+        "tinify/tinify": "^1.5"
+    },
+    "license": "MIT",
+    "authors": [
+        {
+            "name": "Cory Dowdy",
+            "email": "cory@corydowdy.com"
+        }
+    ],
+    "minimum-stability": "dev",
+    "prefer-stable": true,
+    "autoload": {
+        "psr-4": {
+            "Bolt\\Extension\\cdowdy\\tinypng\\": [ "", "src/" ]
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "Bolt\\Extension\\cdowdy\\tinypng\\Tests\\": "tests",
+            "Bolt\\Tests\\": "vendor/bolt/bolt/tests/phpunit/unit/"
+        }
+    },
+    "extra": {
+        "bolt-assets": "web",
+        "bolt-class": "Bolt\\Extension\\cdowdy\\tinypng\\TinyPNGExtension",
+        "bolt-icon": "bolt-icon.png",
+        "bolt-screenshots": [
+            "screenshots/screenshot1.png"
+        ]
+    }
+}
