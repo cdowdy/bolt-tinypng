@@ -50,6 +50,9 @@
                                <br>
                                <strong>Location:</strong> {% if key.located %}{{ key.located }}{% else %}Files{% endif %}
                            </td>
+                           <td class="listthumb">
+                               {{ key.imagePath|showimage(54, 40, 'c')|replace({'alt=""': 'alt="' ~ __('general.phrase.thumbnail')|e('html_attr') ~ '"'})|raw }}
+                           </td>
                            <td class="hidden-xs hidden-sm">
                                <strong>{{ key.filesize }}</strong>
                            </td>
