@@ -61,6 +61,9 @@ class TinyPNGBackendController implements ControllerProviderInterface
         $ctr->post('/optimize', [$this, 'optimizeImage'])
 	        ->bind('tinypng-optimize');
 
+	    $ctr->post('/optimize/rename', [$this, 'renameOptimize'])
+	        ->bind('tinypng-rename');
+
 	    $ctr->before([$this, 'before']);
 
         return $ctr;
@@ -94,7 +97,8 @@ class TinyPNGBackendController implements ControllerProviderInterface
 
 	    $expectedMimes = $this->checkAccpetedTypes();
 	    $files = [];
-		$compressionCount = $this->getCompressionCount();
+
+		$compressionCount = $this->getCompressionCount($app);
 
 
 	    foreach ( $fileList as $object  ) {
@@ -112,6 +116,7 @@ class TinyPNGBackendController implements ControllerProviderInterface
 			    ];
 		    }
 	    }
+
 	    $context = [
 	    	'tinyPNG_files' => $files,
 		    'compressionCount' => $compressionCount,
@@ -120,43 +125,252 @@ class TinyPNGBackendController implements ControllerProviderInterface
 	    return $app['twig']->render('tinypng.imageoptimization.html.twig', $context);
     }
 
-    public function optimizeImage(Application $app, Request $request)
+	/**
+	 * @param Application $app
+	 * @param Request $request
+	 *
+	 * @return JsonResponse
+	 */
+	public function optimizeImage(Application $app, Request $request)
     {
     	$config = $this->config;
+
+    	// request variables to get from the posted data
     	$image = $request->get('image');
+    	$preserveOptions = $request->get('preserve');
+
+    	// get bolts filepath - can be changed by the user
 	    $filesPath = $app['resources']->getpath('filespath');
+
+	    // append filespath to the front of the image we are using
 	    $imagePath = $filesPath . '/' . $image;
 
 	    $tinypngkey = $config['tinypng_apikey'];
 
-	    Tinify\setKey($tinypngkey);
-	    $valid = Tinify\validate();
+
+
+	    $valid = $this->tinypngValidate($app, $tinypngkey);
+
+		$optimized = [];
+		if ($valid) {
+			$optimized = $this->tryOptimization($app, $imagePath,'', $preserveOptions);
+		}
+
+
+	    return new JsonResponse($optimized);
+    }
+
+	/**
+	 * @param Application $app
+	 * @param Request $request
+	 *
+	 * @return JsonResponse
+	 */
+    public function renameOptimize(Application $app, Request $request)
+    {
+	    $config = $this->config;
+
+	    // request variables to get from the posted data
+	    $image = $request->get('image');
+	    $newImageName = $request->get('newName');
+	    $preserveOptions = $request->get('preserve');
+
+
+	    // get bolts filepath - can be changed by the user
+	    $filesPath = $app['resources']->getpath('filespath');
+
+	    // append filespath to the front of the image we are using
+	    $imagePath = $filesPath . '/' . $image;
+
+	    $newImagePath = $filesPath . '/' . $newImageName;
+
+	    $tinypngkey = $config['tinypng_apikey'];
+
+
+	    $valid = $this->tinypngValidate($app, $tinypngkey);
+
 
 	    $optimized = [];
 	    if ($valid) {
-		    $source = \Tinify\fromFile($imagePath);
-		    $optimized[] =  $source->toFile($imagePath);
+		    $optimized = $this->tryOptimization($app, $imagePath, $newImagePath, $preserveOptions);
 	    }
 
 	    return new JsonResponse($optimized);
     }
 
-    protected function getCompressionCount()
+
+	/**
+	 * @param Application $app
+	 *
+	 * @return null|string
+	 */
+    protected function getCompressionCount(Application $app)
     {
 	    $config = $this->config;
 	    $tinypngkey = $config['tinypng_apikey'];
 
-	    Tinify\setKey($tinypngkey);
-	    $valid = Tinify\validate();
+	    $validateKey = $this->tinypngValidate($app, $tinypngkey);
 
-	    if ($valid) {
+	    if ($validateKey) {
 		    $comressionsThisMonth = Tinify\getCompressionCount();
 	    } else {
 		    $comressionsThisMonth = 'your api key isn\'t valid';
+
 	    }
 
 	    return $comressionsThisMonth;
     }
+
+	/**
+	 * @param Application $app
+	 * @param $apiKey
+	 *
+	 * @return bool
+	 */
+	protected function tinypngValidate(Application $app, $apiKey)
+	{
+
+		$config = $this->config;
+
+
+		try {
+			Tinify\setKey($apiKey);
+			Tinify\validate();
+			// Use the Tinify API client.
+		} catch(Tinify\AccountException $e) {
+
+			$message = "TinyPNG Account Exception: " . $e->getMessage();
+			$app['logger.system']->error($message, ['event' => 'authentication']);
+
+			$flash = "There was a problem with your API key or with your API account. Your request could not be authorized. If your compression limit is reached, you can wait until the next calendar month or upgrade your subscription. After verifying your API key and your account status, you can retry the request.";
+			$app['session']->getFlashBag()
+			               ->set('error', 'TinyPNG:: ' . $flash . ' <br/> '  . $e->getMessage());
+			// Verify your API key and account limit.
+		} catch(\Exception $e) {
+			$app['logger.system']->error($e->getMessage(), ['event' => 'exception']);
+		}
+
+		return TRUE;
+	}
+
+	/**
+	 * @param Application $app
+	 * @param $image
+	 * @param $newName
+	 * @param $dataToPreserve
+	 *
+	 * @return array
+	 */
+	protected function tryOptimization(Application $app, $image, $newName, $dataToPreserve)
+	{
+		$optimized = [];
+		$imagename = $this->doRename($image, $newName);
+
+		try {
+			$source = \Tinify\fromFile($image);
+
+			if ($dataToPreserve !== 'none') {
+
+				if( $dataToPreserve === 'location' ) {
+					$preserved = $source->preserve("location");
+
+				} elseif ($dataToPreserve === 'creation'){
+					$preserved = $source->preserve("creation");
+
+				} elseif ($dataToPreserve === 'copyright') {
+					$preserved = $source->preserve("creation");
+				} else {
+					$preserved = $source->preserve("location", "creation", "copyright");
+				}
+
+				$optimized[] = $preserved->toFile($imagename);
+			} else {
+				$optimized[] =  $source->toFile($imagename);
+			}
+
+			// Use the Tinify API client.
+		} catch(Tinify\ClientException $e) {
+
+			$message = "TinyPNG Client Exception: " . $e->getMessage();
+
+			$app['logger.system']->error($message, ['event' => 'exception']);
+
+			$app['session']->getFlashBag()
+			               ->set('error', 'The request could not be completed because of a problem with the submitted data: ' . $e->getMessage());
+
+			// Check your source image and request options.
+		} catch(Tinify\ServerException $e) {
+			$message = "TinyPNG Server Exception: " . $e->getMessage();
+			$app['logger.system']->error($message, ['event' => 'exception']);
+
+			$flash = "The request could not be completed because of a temporary problem with the Tinify API. It is safe to retry the request after a few minutes. If you see this error repeatedly for a longer period of time, please contact support@tinify.com";
+
+			$app['session']->getFlashBag()->set('error', 'TinyPNG Server Exception: ' .  $flash );
+
+			// Temporary issue with the Tinify API.
+		} catch(Tinify\ConnectionException $e) {
+
+			$message = "TinyPNG Connection Exception: " . $e->getMessage();
+			$app['logger.system']->error($message, ['event' => 'exception']);
+
+			$flash = "The request could not be sent because there was an issue connecting to the Tinify API. You should verify your network connection. It is safe to retry the request";
+			$app['session']->getFlashBag()->set('error', 'TinyPNG Connection Exception: ' .  $flash );
+			// A network connection error occurred.
+		} catch(\Exception $e) {
+			$app['logger.system']->error($e->getMessage(), ['event' => 'exception']);
+		}
+
+		return $optimized;
+	}
+
+	/**
+	 * @param $image
+	 * @param $newName
+	 *
+	 * @return string
+	 */
+	protected function doRename($image, $newName)
+	{
+		$getExt = pathinfo($image);
+
+
+		if (empty($newName) ) {
+			return $image;
+		} else {
+			return $newName . '.' . $getExt['extension'];
+		}
+
+	}
+
+	/**
+	 * @param $data
+	 *
+	 * @return string
+	 * this doesn't work because I mucked up the preserved for all
+	 */
+	protected function tinyPngPreserve($data)
+	{
+		$preserved = '';
+
+		if ($data === 'all') {
+
+			$preserved =  '"location", "creation", "copyright"';
+		}
+
+		if ($data === 'location' ) {
+			$preserved = "location";
+		}
+
+		if ($data === "creation" ) {
+			$preserved = "creation";
+		}
+
+		if ($data === "copyright") {
+			$preserved = "copyright";
+		}
+
+		return $preserved;
+	}
 
 
 	/**
@@ -164,9 +378,6 @@ class TinyPNGBackendController implements ControllerProviderInterface
 	 */
 	protected function checkAccpetedTypes()
 	{
-		$acceptedTypes = '';
-
-		$gdAccepted = [ 'image/jpeg', 'image/png', 'image/gif' ];
 
 		return [ 'image/jpeg', 'image/png', 'image/gif' ];
 
