@@ -1,6 +1,6 @@
 $(document).ready(function () {
 
-    // var tinyPNGOptimize = $(".tinyPNG-optimize");
+
     var tinyPNGOptimize = $(".tinyPNG-buttons");
 
 
@@ -11,15 +11,15 @@ $(document).ready(function () {
             var img = target.getAttribute('data-imagePath');
             var preserveData = target.getAttribute('data-optiparam');
 
+
             if (target.classList.contains('tinyPNG-optimize')) {
                 event.preventDefault();
-                // console.log("the image: " + img + " data to preserve: " + preserveData );
                 optimize(img, preserveData);
+
             }
 
             if (target.classList.contains('tnypng-copy')) {
                 event.preventDefault();
-                // console.log("the image: " + img + " data to preserve: " + preserveData );
                 optimize(img, preserveData);
             }
 
@@ -33,9 +33,11 @@ $(document).ready(function () {
                 optimize(img, preserveData);
             }
 
-            if ( target.classList.contains('tnypng-allthree')) {
+
+            if (target.classList.contains('tnypng-allthree')) {
                 event.preventDefault();
                 optimize(img, preserveData);
+
             }
 
             // This is the modal window to optimize and rename an image
@@ -59,7 +61,7 @@ $(document).ready(function () {
             var target = event.target;
             var form = $(target).closest('.form-horizontal');
 
-            if ($(target).hasClass('new-name-input') && $(".new-name-input").length > 0 ) {
+            if ($(target).hasClass('new-name-input') && $(".new-name-input").length > 0) {
                 form.find(".control-label").parent().removeClass('has-error');
                 form.find("input[type=text]").siblings(".input-error").attr("hidden", true);
             }
@@ -67,21 +69,30 @@ $(document).ready(function () {
     });
 
 
-    var optimize = function ( img, preserve ) {
+    /**
+     * optimize the image with tinypng api
+     * @param img - the image to optimize
+     * @param preserve - the data to preserve in the dropdown list - location, creation, copyright
+     */
+    var optimize = function (img, preserve) {
+        var workingModal = $("#working-modal");
         $.ajax({
             type: "POST",
-            url: $( ".dashboardlisting").data("bolt-path") + '/extend/tinypng/optimize',
+            url: $(".dashboardlisting").data("bolt-path") + '/extend/tinypng/optimize',
             data: {
-                'image' : img,
-                'preserve' : preserve
+                'image': img,
+                'preserve': preserve
             },
 
             beforeSend: function () {
+                workingModal.modal("toggle");
+                workingModal.find('.imageToOptimize').text(img + ' is being optimized...');
                 disableButtons();
 
             },
 
             success: function () {
+                workingModal.modal("hide");
                 enableButtons();
             },
 
@@ -93,22 +104,29 @@ $(document).ready(function () {
         });
     };
 
-    var optimizeRename = function (img, newName, preserve ) {
+    /**
+     * rename the image and save
+     * @param img :: the actual image saved to the files directory
+     * @param newName  :: the new name we would like to save it as
+     * @param preserve :: the data we want to save - location, creation or copyright
+     */
+    var optimizeRename = function (img, newName, preserve) {
         $.ajax({
             type: "POST",
-            url: $( ".dashboardlisting").data("bolt-path") + '/extend/tinypng/optimize/rename',
+            url: $(".dashboardlisting").data("bolt-path") + '/extend/tinypng/optimize/rename',
             data: {
-                'image' : img,
-                'newName' : newName,
-                'preserve' : preserve
+                'image': img,
+                'newName': newName,
+                'preserve': preserve
             },
 
             beforeSend: function () {
-                disableButtons();
 
+                disableButtons();
             },
 
             success: function () {
+
                 enableButtons();
             },
 
@@ -121,39 +139,48 @@ $(document).ready(function () {
 
     };
 
-    var verifyNewName = function(newName) {
-        if (newName === '') {
-            $(newName).parent().prev("LABEL").addClass(".has-error");
-            $(newName).parent().prev("LABEL").attr("aria-invalid", true);
-        }
+
+    /**
+     * show the spinner before the ajax request is made
+     * @param targetImage
+     */
+    var showSpinner = function (targetImage) {
+
+        var workingModal = $("#working-modal");
+        workingModal.modal("toggle");
+        workingModal.find('.imageToOptimize').text(targetImage + ' is being optimized...');
     };
 
 
-    function showSpinner(target) {
-        $(target).hide();
-        $(target).before(spinner);
-    }
+    /**
+     * remove the modal after the ajax request has completed
+     */
+    var removeSpinner = function () {
+        $("#working-modal").modal("toggle");
+    };
 
-    function removeSpinner(target) {
-        $(target).show();
-        $(target).siblings(spinner).detach();
-    }
 
-    function disableButtons() {
-        // var buttons = $('.button');
+    /**
+     * disable the buttons so another request can't be made incase of an error
+     */
+    var disableButtons = function () {
         var buttons = document.querySelectorAll('.btn');
 
         for (var i = 0; i < buttons.length; ++i) {
             buttons[i].setAttribute("disabled", "disabled");
         }
-    }
+    };
 
-    function enableButtons() {
+
+    /**
+     * enable the buttons after a successful ajax request
+     */
+    var enableButtons = function () {
         var buttons = document.querySelectorAll('.btn');
 
         for (var i = 0; i < buttons.length; ++i) {
             buttons[i].removeAttribute("disabled");
         }
-    }
+    };
 
 });
