@@ -9,7 +9,7 @@ if ( is_file( $autoload ) ) {
 
 
 use Bolt\Asset\File\JavaScript;
-
+use Bolt\Asset\File\Stylesheet;
 use Bolt\Controller\Zone;
 
 use Bolt\Extension\cdowdy\tinypng\Controller\TinyPNGBackendController;
@@ -35,7 +35,10 @@ class TinyPNGExtension extends SimpleExtension {
 				->setLate( true )
 				->setPriority( 99 )
 				->setAttributes( ['async'] )
-				->setZone( Zone::BACKEND )
+				->setZone( Zone::BACKEND ),
+			(new Stylesheet('tinypng.styles.css'))
+				->setPriority(99)
+				->setZone(Zone::BACKEND)
 		];
 	}
 
