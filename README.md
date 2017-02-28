@@ -18,3 +18,5 @@ tinypng_apikey: 'your_key_here'
 ```
 
 Once your key is setup visit your dashboard and either hover over 'Extras' and click "TinyPNG Image Optimization" or visit while logged into your site's dashboard:  [/bolt/extend/tinypng](/bolt/extend/tinypng)
+
+Panda image by: <a title="By Creative Tail [CC BY 4.0 (http://creativecommons.org/licenses/by/4.0)], via Wikimedia Commons" href="https://commons.wikimedia.org/wiki/File%3ACreative-Tail-Animal-panda.svg">Creative Tail</a>
