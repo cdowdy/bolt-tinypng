@@ -116,8 +116,9 @@ class TinyPNGBackendController implements ControllerProviderInterface
 			    ];
 		    }
 	    }
-
+	    $noKey = empty($this->config['tinypng_apikey']);
 	    $context = [
+	    	'noKey' => $noKey,
 	    	'tinyPNG_files' => $files,
 		    'compressionCount' => $compressionCount,
 	    ];
