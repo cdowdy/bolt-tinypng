@@ -39,7 +39,7 @@
     "extra": {
         "bolt-assets": "web",
         "bolt-class": "Bolt\\Extension\\cdowdy\\tinypng\\TinyPNGExtension",
-        "bolt-icon": "bolt-icon.png",
+        "bolt-icon": "tinypng-icon.png",
         "bolt-screenshots": [
             "screenshots/screenshot1.png"
         ]
