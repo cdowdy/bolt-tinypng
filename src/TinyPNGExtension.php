@@ -18,9 +18,9 @@ use Bolt\Menu\MenuEntry;
 
 
 /**
- * ExtensionName extension class.
+ * TinyPNGExtension extension class.
  *
- * @author Your Name <you@example.com>
+ * @author Cory Dowdy <cory@corydowdy.com>
  */
 class TinyPNGExtension extends SimpleExtension {
 
