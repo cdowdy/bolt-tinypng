@@ -9,11 +9,44 @@
 
 
 {% block page_main %}
+    <svg style="display: none">
+        <symbol id="bolt-spinner" >
+            <path  d="M75 50.5l5-1.5c-.1-2.2-.4-4.3-.9-6.3l-5.2-.1c-.2-.6-.4-1.1-.6-1.7l4-3.3c-.9-1.9-2-3.8-3.2-5.5L69.2 34c-.4-.5-.8-.9-1.2-1.3l2.4-4.6c-1.6-1.4-3.3-2.7-5.1-3.8l-3.7 3.6c-.5-.3-1.1-.5-1.6-.8l.5-5.2c-2-.7-4-1.3-6.2-1.6l-2.1 4.8c-.6-.1-1.2-.1-1.8-.1l-1.5-5c-2.2.1-4.3.4-6.3.9l-.1 5.2c-.6.2-1.1.4-1.7.6l-3.3-4c-1.9.9-3.8 2-5.5 3.2l1.9 4.9c-.5.4-.9.8-1.3 1.2L28 29.6c-1.4 1.6-2.7 3.3-3.8 5.1l3.6 3.7c-.3.5-.5 1.1-.8 1.6l-5.2-.5c-.7 2-1.3 4-1.6 6.2l4.8 2.1c-.1.6-.1 1.2-.1 1.8l-5 1.5c.1 2.2.4 4.3.9 6.3l5.2.1c.2.6.4 1.1.6 1.7l-4 3.3c.9 1.9 2 3.8 3.2 5.5l4.9-1.9c.4.5.8.9 1.2 1.3L29.5 72c1.6 1.4 3.3 2.7 5.1 3.8l3.7-3.6c.5.3 1.1.5 1.6.8l-.5 5.2c2 .7 4 1.3 6.2 1.6l2.1-4.8c.6.1 1.2.1 1.8.1l1.5 5c2.2-.1 4.3-.4 6.3-.9l.1-5.2c.6-.2 1.1-.4 1.7-.6l3.3 4c1.9-.9 3.8-2 5.5-3.2l-1.9-5c.5-.4.9-.8 1.3-1.2l4.6 2.4c1.4-1.6 2.7-3.3 3.8-5.1l-3.6-3.7c.3-.5.5-1.1.8-1.6l5.2.5c.7-2 1.3-4 1.6-6.2l-4.8-2.1c0-.5.1-1.1.1-1.7zM50 65c-8.3 0-15-6.7-15-15s6.7-15 15-15 15 6.7 15 15-6.7 15-15 15z" fill="#204460"></path>
+        </symbol>
+    </svg>
     <div class="row">
+        {% if noKey %}
+            <div class="col-xs-12 alert alert-danger">
+                <h2>You Need To Provide An API Key.</h2>
+                <p>
+                    If You don't have one You can get one from: <a href="https://tinypng.com/developers">TinyPNG API Key</a>
+                </p>
+                <p>
+                    You cannot optimize images without an API key
+                </p>
+            </div>
+        {% endif %}
         <div class="col-xs-12 col-md-7">
             <p>
-                Use TinyPNG and TinyJPG API to optimize your images.
+                Optimize Your Image and Remove all Metadata and Exif data with the "optimize image" button.
             </p>
+            <p>
+                The dropdown button next to "optimize image" offers you four (4) other options
+            </p>
+            <ol>
+                <li>
+                    Preserve The image's copyright exif data
+                </li>
+                <li>
+                    Preserve the image's creation date exif data <strong>(JPEG only)</strong>
+                </li>
+                <li>
+                    Preserve the image's location (gps) exif data <strong>(JPEG only)</strong>
+                </li>
+                <li>
+                    Preserve all of the above
+                </li>
+            </ol>
         </div>
         <div class="col-xs-12 col-md-5">
             <div class="panel panel-default">
@@ -22,7 +55,7 @@
                 </div>
                 <div class="panel-body">
                     <p>
-                        You Have Made {{ compressionCount }} Compressions This Month
+                        You Have Made <strong><span id="compressionCount">{{ compressionCount }}</span></strong> Compressions This Month
                     </p>
                 </div>
             </div>
@@ -39,33 +72,35 @@
                 </thead>
                 <tbody>
 
-                   {% for obj, key in tinyPNG_files %}
-                       <tr class="tinyPNG-buttons">
-                           <td>
-                               <i class="fa fa-fw fa-file-image-o"></i>
-                               <a href="{{ key.imagePath|thumbnail(1000, 1000, 'r')  }}"
-                                  class="magnific"
-                                  title="Image: {{ key.filename }}">
-                                   <strong>{{ key.filename }}</strong>
-                               </a>
-                               <br>
-                               <strong>Location:</strong> {% if key.located %}{{ key.located }}{% else %}Files{% endif %}
-                           </td>
-                           <td class="listthumb">
-                               {{ key.imagePath|showimage(54, 40, 'c')|replace({'alt=""': 'alt="' ~ __('general.phrase.thumbnail')|e('html_attr') ~ '"'})|raw }}
-                           </td>
-                           <td class="hidden-xs hidden-sm">
-                               <strong>{{ key.filesize }}</strong>
-                           </td>
+                {% for obj, key in tinyPNG_files %}
+                    <tr class="tinyPNG-buttons">
+                        <td>
+                            <i class="fa fa-fw fa-file-image-o"></i>
+                            <a href="{{ key.imagePath|thumbnail(1000, 1000, 'r') }}"
+                               class="magnific"
+                               title="Image: {{ key.filename }}">
+                                <strong>{{ key.filename }}</strong>
+                            </a>
+                            <br>
+                            <strong>Location:</strong> {% if key.located %}{{ key.located }}{% else %}Files{% endif %}
+                        </td>
+                        <td class="listthumb">
+                            {{ key.imagePath|showimage(54, 40, 'c')|replace({'alt=""': 'alt="' ~ __('general.phrase.thumbnail')|e('html_attr') ~ '"'})|raw }}
+                        </td>
+                        <td class="hidden-xs hidden-sm">
+                            <strong>{{ key.filesize }}</strong>
+                        </td>
 
                         <td>
                             <div class="btn-group">
-                                <button class="btn btn-default btn-sm tinyPNG-optimize"
+                                <button type="button" class="btn btn-default btn-sm tinyPNG-optimize"
                                         data-imagePath="{{ key.imagePath }}"
-                                        data-optiparam="none">
+                                        data-optiparam="none"
+                                        data-toggle="modal"
+                                        data-target="#working-modal">
                                     optimize image
                                 </button>
-                                <button class="btn btn-default btn-sm dropdown-toggle tinyPNG-dropdown"
+                                <button type="button" class="btn btn-default btn-sm dropdown-toggle tinyPNG-dropdown"
                                         data-toggle="dropdown"
                                         aria-haspopup="true"
                                         aria-expanded="false">
@@ -81,7 +116,7 @@
                                     <li>
                                         <a class="tnypng-create" href="#"
                                            data-imagePath="{{ key.imagePath }}"
-                                           data-optiparam="creation" >Preserve Creation</a>
+                                           data-optiparam="creation">Preserve Creation</a>
                                     </li>
                                     <li>
                                         <a class="tnypng-location" href="#"
@@ -97,7 +132,11 @@
                                 </ul>
                             </div>
                             <div class="btn-group">
-                                <button  class="btn btn-default btn-sm" data-toggle="modal" data-target="#{{ loop.index }}-renameModal" data-optiparam="none">
+                                <button type="button"
+                                        class="btn btn-default btn-sm"
+                                        data-toggle="modal"
+                                        data-target="#{{ loop.index }}-renameModal"
+                                        data-optiparam="none">
                                     Optimize &amp; Rename
                                 </button>
                             </div>
@@ -117,7 +156,8 @@
                                                 This will optimize your image and save it under the name you choose
                                                 below in the text input box.
                                             </p>
-                                            <form class="form-horizontal" id="{{ loop.index }}-rename-form" method="POST" action="{{ path('tinypng-optimize') }}">
+                                            <form class="form-horizontal" id="{{ loop.index }}-rename-form"
+                                                  method="POST" action="{{ path('tinypng-optimize') }}">
                                                 <div class="form-group">
                                                     <label for="newname"
                                                            class="col-sm-2 control-label">Name
@@ -211,13 +251,41 @@
                         </td>
 
 
-                       </tr>
-                       {% endfor %}
+                    </tr>
+                {% endfor %}
                 </tbody>
             </table>
         </div>
         <div class="col-xs-12 ajax-error">
 
+        </div>
+
+        <div class="modal fade" id="working-modal"
+             tabindex="-1" role="dialog"
+             aria-labelledby="workingModal">
+            <div class="modal-dialog" role="document">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <button type="button" class="close" data-dismiss="modal"
+                                aria-label="Close"><span aria-hidden="true">&times;</span>
+                        </button>
+                        <h4 class="modal-title" id="workingModal">Image Is Being Optimized :)</h4>
+                    </div>
+                    <div class="modal-body">
+                        <svg class="bolt-spinner" viewBox="0 0 100 100">
+                            <use xlink:href="#bolt-spinner"/>
+                        </svg>
+                        <p class="imageToOptimize">
+
+                        </p>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-default" data-dismiss="modal">
+                            Close
+                        </button>
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
 
