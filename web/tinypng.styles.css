@@ -1,0 +1,21 @@
+.bolt-spinner {
+    display: block;
+    width: 30%;
+    height: 30%;
+    -webkit-animation: boltspinner 2.5s infinite linear;
+    -o-animation: boltspinner 2.5s infinite linear;
+    animation: boltspinner 2.5s infinite linear;
+    /*transform-origin: 50px 50px;*/
+    margin: 0 auto;
+}
+
+@keyframes boltspinner {
+    from {
+        transform: rotate(0deg);
+    }
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+.imageToOptimize { text-align: center;}
