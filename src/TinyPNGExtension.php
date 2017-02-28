@@ -30,16 +30,13 @@ class TinyPNGExtension extends SimpleExtension {
 	 */
 	protected function registerAssets() {
 
-
-		$asset = new JavaScript();
-		$asset->setFileName( '/extensions/vendor/cdowdy/tinypng/tinypng.optimize.js' )
-		      ->setLate( true )
-		      ->setPriority( 99 )
-		      ->setAttributes( [ 'defer', 'async' ] )
-		      ->setZone( Zone::BACKEND );
-
-
-		return [ $asset ];
+		return [
+			(new JavaScript('tinypng.optimize.js') )
+				->setLate( true )
+				->setPriority( 99 )
+				->setAttributes( ['async'] )
+				->setZone( Zone::BACKEND )
+		];
 	}
 
 
