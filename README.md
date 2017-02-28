@@ -17,4 +17,4 @@ Once you have your key enter it into the extensions config under 'tinypng_apikey
 tinypng_apikey: 'your_key_here'
 ```
 
-Once your key is setup visit your dashboard and either hover over 'Extras' and click "TinyPNG Image Optimization" or visit while logged into your site's dashboard:  '/bolt/extend/tinypng'
+Once your key is setup visit your dashboard and either hover over 'Extras' and click "TinyPNG Image Optimization" or visit while logged into your site's dashboard:  [/bolt/extend/tinypng](/bolt/extend/tinypng)
