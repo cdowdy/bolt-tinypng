@@ -52,7 +52,11 @@ $(document).ready(function () {
                     form.find(".control-label").attr("aria-invalid", true);
                     form.find("input[type=text]").siblings(".input-error").attr("hidden", false);
                 } else {
+                    // form.find(".form-input-container").attr("hidden", true);
+                    // form.find(".tnypng-spinner-container").attr("hidden", false);
+                    // $(".renameModal").find('.imageToOptimize').text(img + ' is being optimized...');
                     optimizeRename(img, theName, preserveRadio);
+                    removeRenameSpiner(form, ".form-input-container", ".tnypng-spinner-container", img);
                 }
             }
         },
@@ -126,7 +130,6 @@ $(document).ready(function () {
             },
 
             success: function () {
-
                 enableButtons();
             },
 
@@ -135,6 +138,21 @@ $(document).ready(function () {
                 console.log("Details: " + desc + "\nError:" + err);
                 $(".ajax-error").append(xhr.responseText);
             }
+        });
+
+    };
+
+    // remove the spinner in the rename and optimize modal window after a successful ajax request
+    var removeRenameSpiner = function (formElement, formInputContainer, spinnerContainer, imageToOptimize) {
+        var renameModal = $(".renameModal");
+
+        formElement.find(formInputContainer).attr("hidden", true);
+        formElement.find(spinnerContainer).attr("hidden", false);
+        renameModal.find('.imageToOptimize').text(imageToOptimize + ' is being optimized...');
+        $(document).ajaxSuccess(function () {
+            formElement.find(formInputContainer).attr("hidden", false);
+            formElement.find(spinnerContainer).attr("hidden", true);
+            renameModal.modal("hide");
         });
 
     };
