@@ -19,3 +19,6 @@
 }
 
 .imageToOptimize { text-align: center;}
+
+/* makes sure browsers who don't understand the "hidden" attribute actually hide the element */
+*[hidden] { display: none; }
