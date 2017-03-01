@@ -104,6 +104,9 @@ class TinyPNGBackendController implements ControllerProviderInterface {
 
 		foreach ( $fileList as $object ) {
 
+			// we only want "files" here so anything else in the files directory can be "discarded"
+			// we'll also skip over if there is a ".cache" directory like from my betterthumbs extension
+			// finally we'll make sure we are only deailing with jpg/png files
 			if ( $object['type'] == 'file'
 			     && ! preg_match_all( '/^.cache\//i', $object['dirname'] )
 			     && in_array( strtolower( $filesystem->getMimetype( $object['path'] ) ), $expectedMimes )
