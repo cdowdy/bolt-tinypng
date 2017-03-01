@@ -76,6 +76,7 @@ class TinyPNGBackendController implements ControllerProviderInterface {
 	 */
 	public function before( Request $request, Application $app ) {
 		if ( ! $app['users']->isAllowed( 'dashboard' ) ) {
+
 			/** @var UrlGeneratorInterface $generator */
 			$generator = $app['url_generator'];
 
