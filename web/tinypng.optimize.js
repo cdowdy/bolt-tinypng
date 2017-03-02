@@ -101,6 +101,7 @@ $(document).ready(function () {
             },
 
             error: function (xhr, desc, err) {
+                enableButtons();
                 console.log(xhr);
                 console.log("Details: " + desc + "\nError:" + err);
                 $(".ajax-error").append(xhr.responseText);
@@ -134,6 +135,7 @@ $(document).ready(function () {
             },
 
             error: function (xhr, desc, err) {
+                enableButtons();
                 console.log(xhr);
                 console.log("Details: " + desc + "\nError:" + err);
                 $(".ajax-error").append(xhr.responseText);
