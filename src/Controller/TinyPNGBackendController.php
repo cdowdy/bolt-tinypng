@@ -92,7 +92,8 @@ class TinyPNGBackendController implements ControllerProviderInterface {
 	 * @return mixed
 	 */
 	public function allImages( Application $app ) {
-		$adapter    = new Local( $app['resources']->getPath( 'filespath' ) );
+		$boltFilesPath = $app['resources']->getPath( 'filespath' );
+		$adapter    = new Local( $boltFilesPath );
 		$filesystem = new Filesystem( $adapter );
 		$fileList   = $filesystem->listContents( null, true );
 
@@ -112,12 +113,18 @@ class TinyPNGBackendController implements ControllerProviderInterface {
 			     && in_array( strtolower( $filesystem->getMimetype( $object['path'] ) ), $expectedMimes )
 			) {
 
+				$imageWidthHeight = getimagesize($boltFilesPath . '/' . $object['path']);
+				$width = $imageWidthHeight[0];
+				$height = $imageWidthHeight[1];
+
 				$files[] = [
 					'filename'  => $object['basename'],
 					'located'   => $object['dirname'],
 					'imagePath' => $object['path'],
 					'mimeType'  => $filesystem->getMimetype( $object['path'] ),
 					'filesize'  => self::bytesToHuman( $filesystem->getSize( $object['path'] ) ),
+					'imageWidth' => $width,
+					'imageHeight' => $height,
 				];
 			}
 		}
