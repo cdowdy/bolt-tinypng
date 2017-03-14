@@ -1,0 +1,36 @@
+
+{%- block form_widget_compound -%}
+    <fieldset {{ block('widget_container_attributes') }}>
+        {%- if form.parent is empty -%}
+            {{ form_errors(form) }}
+        {%- endif -%}
+        {{- block('form_rows') -}}
+        {{- form_rest(form) -}}
+    </fieldset>
+{%- endblock form_widget_compound -%}
+
+{% block form_row %}
+    {% spaceless %}
+        <div class="form-group{% if not valid %} has-error{% endif %}">
+
+            {{ form_label(form ) }}
+            {{ form_widget(form) }}
+
+            {{ form_errors(form) }}
+        </div>
+
+    {% endspaceless %}
+{% endblock form_row %}
+
+
+{%- block form_errors -%}
+    {%- if errors|length > 0 -%}
+        <ul class="tinypng_form_errors">
+            {%- for error in errors -%}
+                <li>{{ error.message }}</li>
+            {%- endfor -%}
+        </ul>
+    {%- endif -%}
+{%- endblock form_errors -%}
+
+
