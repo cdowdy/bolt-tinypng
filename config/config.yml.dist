@@ -1,3 +1,26 @@
 # TinyPNG API Key
 
 tinypng_apikey: 
+
+# ================================================================================= #
+# TinyPNG upload and resize settings.
+# You can restrict the sizes of images that are uploaded to bolt's 'files' here. Images uploaded through
+# tinyPNG will be optimized and resized to the dimensions set here.
+#
+# Settings Options:
+# method: this is the method you wish to use to resize your images. Options are:
+#
+# * scale
+# - Scales the image proportionally. You must provide either a target width or a target height, but not both. The scaled image will have exactly the provided width or height
+#
+# * fit
+# - Scales the image down proportionally so that it fits within the given dimensions. You must provide both a width and a height. The scaled image will not exceed either of these dimensions.
+#
+# * cover
+# - Scales the image proportionally and crops it if necessary so that the result has exactly the given dimensions. You must provide both a width and a height. Which parts of the image are cropped away is determined automatically. An intelligent algorithm determines the most important areas and leaves these intact.
+#
+# ================================================================================= #
+tinypng_upload:
+  method: 'scale'
+  width: 1000
+  #height:
