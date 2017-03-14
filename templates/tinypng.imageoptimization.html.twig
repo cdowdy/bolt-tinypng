@@ -61,6 +61,40 @@
             </div>
         </div>
         <div class="col-xs-12">
+            <hr>
+            <table class="dashboardlisting" data-bolt-path="{{ path('dashboard') }}">
+                <thead>
+                <tr>
+                    <th>Upload, Resize &amp; Optimize Images</th>
+                    <th>Upload Settings</th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr>
+                    <td>
+                        {% form_theme showUpload '_tinypng-forms.html.twig' %}
+                        {{ form_start( showUpload, {
+                            'action': path('tinypng-all-images'),
+                            'method': 'POST',
+                            'attr': {'id': 'tinypng_upload_form'}
+                            })
+                        }}
+                        {{ form_widget( showUpload ) }}
+                        {{ form_end( showUpload ) }}
+                    </td>
+                    <td>
+                        <p><b>Upload Method:</b> {{ uploadMethod }}</p>
+                        {% if maxWidth %}<p><b>Width:</b> {{ maxWidth }}px</p>{% endif %}
+                        {% if maxHeight %}<p><b>Height:</b> {{ maxHeight }}px</p>{% endif %}
+                        {#<p><b>Metadata:</b> {{ saveData }}</p>#}
+                    </td>
+                </tr>
+                </tbody>
+
+            </table>
+
+        </div>
+        <div class="col-xs-12">
             <table class="dashboardlisting" data-bolt-path="{{ path('dashboard') }}">
                 <thead>
                 <tr>
@@ -268,7 +302,7 @@
             </table>
         </div>
         <div class="col-xs-12 ajax-error">
-
+            {{ message }}
         </div>
 
         {% include '_tinypng-working-modal.twig' %}
