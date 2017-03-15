@@ -601,7 +601,7 @@ class TinyPNGBackendController implements ControllerProviderInterface {
 	 */
 	private function renameExisting( $normalizedName, $extension )
 	{
-		return $normalizedName . '_' . date( "Ymd_s" ) . '.' . $extension;
+		return $normalizedName . '_' . date( "Ymd_" ) . uniqid(). '.' . $extension;
 	}
 
 
