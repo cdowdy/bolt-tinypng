@@ -92,7 +92,8 @@ class TinyPNGBackendController implements ControllerProviderInterface {
 	 */
 	public function before( Request $request, Application $app )
 	{
-		if ( ! $app['users']->isAllowed( 'dashboard' ) ) {
+		// make sure the logged in user can view and uplooad files
+		if ( ! $app['users']->isAllowed( 'files' ) ) {
 
 			/** @var UrlGeneratorInterface $generator */
 			$generator = $app['url_generator'];
