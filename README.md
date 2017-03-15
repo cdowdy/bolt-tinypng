@@ -57,10 +57,10 @@ __Notes On Uploaded Images__
 if you're using Nginx and get a 504 Gateway timeout you may need to add a section to your Nginx sites-available conf then reload nginx. The portion you'll need to add is ``fastcgi_keep_conn on;``:  
 
 ```nginx
-    location ~ \.php$ {
-        # the other php location block settings...
-        fastcgi_keep_conn on; # this is what you'll more than likely need to add
-    }
+location ~ \.php$ {  
+  # the other php location block settings...
+  fastcgi_keep_conn on; # this is what you'll more than likely need to add
+}
 ```  
 
 If your upload fails with the message:  
