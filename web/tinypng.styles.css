@@ -28,3 +28,12 @@
 
 /* makes sure browsers who don't understand the "hidden" attribute actually hide the element */
 *[hidden] { display: none; }
+
+/** tinypng upload form error list **/
+.tinypng_form_errors {
+    list-style: none;
+    padding-left: 0;
+    margin-top: 1rem;
+    font-weight: bold;
+    color: #a94442;
+}
