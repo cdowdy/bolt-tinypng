@@ -40,6 +40,14 @@ $(document).ready(function () {
 
             }
 
+            if (target.classList.contains('tinypng-delete')) {
+                event.preventDefault();
+                var containerID = $('#' + this.id);
+                // containerID.addClass("removed-item");
+                deleteImage(img, containerID);
+
+            }
+
             // This is the modal window to optimize and rename an image
             if (target.classList.contains('tnypng-submit')) {
                 var form = $(target).closest('.form-horizontal');
@@ -87,6 +95,7 @@ $(document).ready(function () {
                 'image': img,
                 'preserve': preserve
             },
+            dataType: "json",
 
             beforeSend: function () {
                 workingModal.modal("toggle");
@@ -95,9 +104,11 @@ $(document).ready(function () {
 
             },
 
-            success: function () {
+            success: function (data) {
                 workingModal.modal("hide");
                 enableButtons();
+                postOptimizeUpdate(data);
+
             },
 
             error: function (xhr, desc, err) {
@@ -124,14 +135,45 @@ $(document).ready(function () {
                 'newName': newName,
                 'preserve': preserve
             },
+            dataType: 'json',
 
             beforeSend: function () {
 
                 disableButtons();
             },
 
-            success: function () {
+            success: function (data) {
                 enableButtons();
+                postOptimizeUpdate(data);
+            },
+
+            error: function (xhr, desc, err) {
+                enableButtons();
+                console.log(xhr);
+                console.log("Details: " + desc + "\nError:" + err);
+                $(".ajax-error").append(xhr.responseText);
+            }
+        });
+
+    };
+
+    var deleteImage = function (img, containerID) {
+        $.ajax({
+            type: "POST",
+            url: $(".dashboardlisting").data("bolt-path") + '/extend/tinypng/optimize/delete',
+            data: {
+                'image': img,
+            },
+            dataType: 'json',
+
+            beforeSend: function () {
+                containerID.addClass("removed-item");
+                disableButtons();
+            },
+
+            success: function (data) {
+                enableButtons();
+                containerID.remove();
             },
 
             error: function (xhr, desc, err) {
@@ -203,4 +245,63 @@ $(document).ready(function () {
         }
     };
 
+    var postOptimizeUpdate = function (responseObject) {
+
+        $.each(responseObject, function (i, obj) {
+            $("#compressionCount").text(obj.compressionCount);
+            $("#imgFileSize").text(obj.optimizedSize);
+        });
+    };
+
+
+    Dropzone.options.tinypngUploadForm = {
+        paramName: "tnypng_file", // The name that will be used to transfer the file
+        // maxFilesize: 2, // MB
+        acceptedFiles: 'image/png,image/jpeg',
+        thumbnailWidth: 80,
+        thumbnailHeight: null,
+        previewTemplate: document.getElementById('dropzone-preview').innerHTML,
+        addRemoveLinks: true,
+        accept: function (file, done) {
+            done();
+        },
+
+
+        init: function () {
+            $("#tinypng_upload_form").addClass("form-inline");
+
+            this.on("complete", function (progress) {
+                $(".progress").hide();
+                document.querySelector(".progress-bar").style.opacity = "0";
+            });
+
+            this.on("success", function (file, response, xhr) {
+
+                $.each(response, function (i, obj) {
+                    $("#filelist").html("<p>" + obj.name + "</p>");
+                    $("#compressionCount").text(obj.compressionCount);
+                });
+
+
+            });
+
+            this.on("error", function (file, errorMessage, xhr) {
+                var errorContainer = $(file.previewElement).find('.dz-error-message');
+                if (xhr && xhr.status === 413) {
+                    // if (xhr.status === 413) {
+                    errorMessage = "Server Error: " + xhr.status + ' ' + xhr.statusText;
+                    // }
+                }
+
+                errorContainer.text(errorMessage).addClass("alert alert-danger");
+            });
+        }
+    };
+
 });
+
+
+
+
+
+
