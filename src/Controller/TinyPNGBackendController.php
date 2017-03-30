@@ -3,27 +3,20 @@
 namespace Bolt\Extension\cdowdy\tinypng\Controller;
 
 
+use Bolt\Extension\cdowdy\tinypng\Handler\TinyPNGUpload;
 use Bolt\Filesystem\Exception\IOException;
+use League\Flysystem\Adapter\Local;
+use League\Flysystem\Filesystem;
 use Silex\Application;
 use Silex\ControllerCollection;
 use Silex\ControllerProviderInterface;
-
-use Symfony\Component\Validator\Constraints as Assert;
-use Symfony\Component\Form\Extension\Core\Type\SubmitType;
+use Symfony\Component\Form\Form;
 use Symfony\Component\HttpFoundation\JsonResponse;
+use Symfony\Component\HttpFoundation\RedirectResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
-use Symfony\Component\HttpFoundation\RedirectResponse;
 use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
-use Symfony\Component\Form\Extension\Core\Type\FileType;
-use Symfony\Component\Form\Extension\Core\Type\FormType;
-use Symfony\Component\Form\Form;
-use League\Flysystem\Adapter\Local;
-use League\Flysystem\Filesystem;
-
-use Bolt\Extension\cdowdy\tinypng\Handler\TinyPNGUpload;
-
-
+use Symfony\Component\Validator\Constraints as Assert;
 use Tinify;
 
 
@@ -79,6 +72,12 @@ class TinyPNGBackendController implements ControllerProviderInterface {
 		$ctr->post( '/optimize/upload', [ $this, 'uploadImage' ] )
 		    ->bind( 'tinypng-upload-images' );
 
+		$ctr->post( '/optimize/delete', [ $this, 'deleteImage' ] )
+		    ->bind( 'tinypng-delete-image' );
+
+//		$ctr->post( "/optimize/newUpload", [ $this, "newUploadImage" ] )
+//		    ->bind( "tinypng_new_upload" );
+
 		$ctr->before( [ $this, 'before' ] );
 
 		return $ctr;
@@ -107,6 +106,8 @@ class TinyPNGBackendController implements ControllerProviderInterface {
 	/**
 	 * @param Application $app
 	 *
+	 * @param Request     $request
+	 *
 	 * @return mixed
 	 */
 	public function allImages( Application $app, Request $request )
@@ -120,11 +121,108 @@ class TinyPNGBackendController implements ControllerProviderInterface {
 		$fileList = $filesystem->listContents( null, true );
 
 		$expectedMimes = $this->checkAccpetedTypes();
-		$files         = [];
+		$files         = $this->renderFileList( $filesystem, $fileList, $boltFilesPath, $expectedMimes );
 
 		// get the compression count :: might wanna change this to use ajax so it's updated after a compression
 		$compressionCount = $this->getCompressionCount( $app );
 
+
+//		foreach ( $fileList as $object ) {
+//
+//			// we only want "files" here so anything else in the files directory can be "discarded"
+//			// we'll also skip over if there is a ".cache" directory like from my betterthumbs extension
+//			// finally we'll make sure we are only deailing with jpg/png files
+//			if ( $object['type'] == 'file'
+//			     && ! preg_match_all( '/^.cache\//i', $object['dirname'] )
+//			     && in_array( strtolower( $filesystem->getMimetype( $object['path'] ) ), $expectedMimes )
+//			) {
+//
+//				$imageWidthHeight = getimagesize( $boltFilesPath . '/' . $object['path'] );
+//				$width            = $imageWidthHeight[0];
+//				$height           = $imageWidthHeight[1];
+//
+//				$files[] = [
+//					'filename'    => $object['basename'],
+//					'located'     => $object['dirname'],
+//					'imagePath'   => $object['path'],
+//					'mimeType'    => $filesystem->getMimetype( $object['path'] ),
+//					'filesize'    => self::bytesToHuman( $filesystem->getSize( $object['path'] ) ),
+//					'imageWidth'  => $width,
+//					'imageHeight' => $height,
+//				];
+//			}
+//		}
+
+		// create an upload form, add some constraints making sure it's an image and its a PNG or JPG
+//		$uploadForm = $app['form.factory']
+//			->createNamedBuilder( "form_tinypng", FormType::class )
+//			->add( 'file', FileType::class,
+//				[
+//					'label'       => 'Upload an Image',
+//					'multiple'    => true,
+//					'attr'        => [
+//						'class'  => 'tinypng-inputfile',
+//						'accept' => 'image/jpeg,image/png'
+//					],
+//					'label_attr'  => [ 'class' => 'control-label' ],
+//					// mutliple file upload constraints are returned as an object. A string is expected
+//					// so wrap this in "Assert\All" so they actually get validated
+//					'constraints' => [
+//						new Assert\All( [
+//							new Assert\Image( [
+//								'mimeTypes'        => [
+//									'image/jpeg',
+//									'image/png',
+//									'image/gif'
+//								],
+//								'mimeTypesMessage' => 'Images Must Be Either a PNG or JPG / JPEG',
+//							] ),
+//						] )
+//					]
+//				] )
+////			->add( "Upload_File", SubmitType::class,
+////				[
+////					'attr' => [ 'class' => 'btn btn-primary tinypng-upload' ]
+////				] )
+//			->getForm();
+
+		if ( $request->isMethod( 'POST' ) ) {
+			$this->uploadImage( $app, $request );
+		}
+
+
+		// check to see if the tinypng api key is empty
+		$noKey = empty( $this->config['tinypng_apikey'] );
+
+		$tnyPngUpload = new TinyPNGUpload( $app, $this->config );
+
+		$configMethod = isset( $this->config['tinypng_upload']['method'] )
+			? $this->config['tinypng_upload']['method']
+			: '';
+
+		$methods = $tnyPngUpload->tinyPNGMethod( $configMethod );
+
+		$checkW = $tnyPngUpload->checkForWidthHeights( 'width' );
+		$checkH = $tnyPngUpload->checkForWidthHeights( 'height' );
+
+		// context to render in our twig template
+		$context = [
+			'noKey'            => $noKey,
+			'tinyPNG_files'    => $files,
+			'compressionCount' => $compressionCount,
+//			'showUpload'       => $uploadForm->createView(),
+			'uploadMethod'     => $methods,
+//			'saveData' => $metadata,
+			'maxWidth'         => $checkW,
+			'maxHeight'        => $checkH,
+		];
+
+		return $app['twig']->render( 'tinypng.imageoptimization.html.twig', $context );
+	}
+
+	protected function renderFileList( $filesystem, $fileList, $boltFilesPath, $expectedMimes )
+	{
+		$files = [];
 
 		foreach ( $fileList as $object ) {
 
@@ -152,75 +250,7 @@ class TinyPNGBackendController implements ControllerProviderInterface {
 			}
 		}
 
-		// create an upload form, add some constraints making sure it's an image and its a PNG or JPG
-		$uploadForm = $app['form.factory']
-			->createNamedBuilder( "form_tinypng", FormType::class )
-			->add( 'upload', FileType::class,
-				[
-					'label'       => 'Upload an Image',
-					'multiple'    => true,
-					'attr'        => [
-						'class'  => 'tinypng-inputfile',
-						'accept' => 'image/jpeg,image/png'
-					],
-					'label_attr'  => [ 'class' => 'control-label' ],
-					// mutliple file upload constraints are returned as an object. A string is expected
-					// so wrap this in "Assert\All" so they actually get validated
-					'constraints' => [
-						new Assert\All( [
-							new Assert\Image( [
-								'mimeTypes'        => [
-									'image/jpeg',
-									'image/png',
-									'image/gif'
-								],
-								'mimeTypesMessage' => 'Images Must Be Either a PNG or JPG / JPEG',
-							] ),
-						] )
-					]
-				] )
-			->add( "Upload_File", SubmitType::class,
-				[
-					'attr' => [ 'class' => 'btn btn-primary tinypng-upload' ]
-				] )
-			->getForm();
-
-		if ( $request->isMethod( 'POST' ) ) {
-			$this->uploadImage( $app, $request, $uploadForm );
-//
-//			$urlGenerator = $app['url_generator'];
-//
-//			return new RedirectResponse( $urlGenerator->generate( 'tinypng-upload-images' ) );
-		}
-
-
-		// check to see if the tinypng api key is empty
-		$noKey = empty( $this->config['tinypng_apikey'] );
-
-		$tnyPngUpload = new TinyPNGUpload( $app, $this->config );
-
-		$configMethod = isset( $this->config['tinypng_upload']['method'] )
-			? $this->config['tinypng_upload']['method']
-			: '';
-
-		$methods = $tnyPngUpload->tinyPNGMethod( $configMethod );
-
-		$checkW = $tnyPngUpload->checkForWidthHeights( 'width' );
-		$checkH = $tnyPngUpload->checkForWidthHeights( 'height' );
-
-		// context to render in our twig template
-		$context = [
-			'noKey'            => $noKey,
-			'tinyPNG_files'    => $files,
-			'compressionCount' => $compressionCount,
-			'showUpload'       => $uploadForm->createView(),
-			'uploadMethod'     => $methods,
-//			'saveData' => $metadata,
-			'maxWidth'         => $checkW,
-			'maxHeight'        => $checkH,
-		];
-
-		return $app['twig']->render( 'tinypng.imageoptimization.html.twig', $context );
+		return $files;
 	}
 
 	/**
@@ -240,6 +270,9 @@ class TinyPNGBackendController implements ControllerProviderInterface {
 		// get bolts filepath - can be changed by the user
 		$filesPath = $app['resources']->getpath( 'filespath' );
 
+		$adapter    = new Local( $filesPath );
+		$filesystem = new Filesystem( $adapter );
+
 		// append filespath to the front of the image we are using
 		$imagePath = $filesPath . '/' . $image;
 
@@ -250,7 +283,13 @@ class TinyPNGBackendController implements ControllerProviderInterface {
 
 		$optimized = [];
 		if ( $valid ) {
-			$optimized = $this->tryOptimization( $app, $imagePath, '', $preserveOptions );
+			$this->tryOptimization( $app, $imagePath, '', $preserveOptions );
+			$optimized[] = [
+//				'optimizedImage' =>,
+//				'filelist' => $this->renderFileList($filesystem)
+				'compressionCount' => $this->getCompressionCount( $app ),
+				'optimizedSize'    => self::bytesToHuman( $filesystem->getSize( $image ) ),
+			];
 		}
 
 
@@ -276,6 +315,9 @@ class TinyPNGBackendController implements ControllerProviderInterface {
 		// get bolts filepath - can be changed by the user
 		$filesPath = $app['resources']->getpath( 'filespath' );
 
+		$adapter    = new Local( $filesPath );
+		$filesystem = new Filesystem( $adapter );
+
 		// append filespath to the front of the image we are using
 		$imagePath = $filesPath . '/' . $image;
 
@@ -288,11 +330,26 @@ class TinyPNGBackendController implements ControllerProviderInterface {
 
 
 		$optimized = [];
+
 		if ( $valid ) {
-			$optimized = $this->tryOptimization( $app, $imagePath, $newImagePath, $preserveOptions );
+			$this->tryOptimization( $app, $imagePath, $newImagePath, $preserveOptions );
+			$optimized[] = [
+				'compressionCount' => $this->getCompressionCount( $app ),
+				'optimizedSize'    => self::bytesToHuman( $filesystem->getSize( $image ) ),
+			];
 		}
 
 		return new JsonResponse( $optimized );
+	}
+
+	public function deleteImage( Application $app, Request $request )
+	{
+		$boltFilesPath = $app['resources']->getPath( 'filespath' );
+		$adapter       = new Local( $boltFilesPath );
+		$filesystem    = new Filesystem( $adapter );
+		$image         = $request->get( 'image' );
+
+		return new JsonResponse( $filesystem->delete( $image ), 200 );
 	}
 
 
@@ -406,7 +463,7 @@ class TinyPNGBackendController implements ControllerProviderInterface {
 			$app['logger.system']->error( $message, [ 'event' => 'exception' ] );
 
 			$flash = "The request could not be sent because there was an issue connecting to the Tinify API. You should verify your network connection. It is safe to retry the request";
-			$app['logger.flash']->error(  'TinyPNG Connection Exception: ' . $flash );
+			$app['logger.flash']->error( 'TinyPNG Connection Exception: ' . $flash );
 			// A network connection error occurred.
 		} catch ( \Exception $e ) {
 			$app['logger.system']->error( $e->getMessage(), [ 'event' => 'exception' ] );
@@ -492,21 +549,12 @@ class TinyPNGBackendController implements ControllerProviderInterface {
 		return round( $bytes, 2 ) . ' ' . $units[ $i ];
 	}
 
-	/**
-	 * @param Application $app
-	 * @param Request     $request
-	 * @param Form        $form
-	 *
-	 * @return null|JsonResponse
-	 */
-	public function uploadImage( Application $app, Request $request, Form $form )
+	public function uploadImage( Application $app, Request $request )
 	{
 		$config        = $this->config;
 		$boltFilesPath = $app['resources']->getPath( 'filespath' );
 		$adapter       = new Local( $boltFilesPath );
 		$filesystem    = new Filesystem( $adapter );
-		$form->submit( $request );
-		$wrongImageType = $form['upload']->getErrors();
 
 		$tinypngkey = $config['tinypng_apikey'];
 
@@ -520,28 +568,45 @@ class TinyPNGBackendController implements ControllerProviderInterface {
 
 		$resizeMethod = $tnypngUpload->tinyPNGMethod( $configMethod );
 
+		$success = [];
 
-		if ( ! $form->isValid() ) {
-			$app['logger.flash']->error( 'TinyPNG File upload failed:: ' . $wrongImageType );
 
-			return null;
+		/**
+		 * set up our files. If the request is from XHR (ajax) then we make the file bag get
+		 * $request->files instead of $request->files->get("our_file_input_name");
+		 */
+		if ( $request->isXmlHttpRequest() ) {
+			$files = $request->files;
+		} else {
+			$files = $request->files->get( "tnypng_file" );
 		}
 
-		$files = $request->files->get( $form->getName() );
-		$files = $files['upload'];
+		foreach ( $files as $img ) {
 
+			$validImage = $this->validateImage( $app, $img->getRealPath() );
 
-		$uploadOptimized = [];
+			if ( count( $validImage ) > 0 ) {
 
-		// flysystem stream uploads
-		foreach ( $files as $image ) {
-			if ( $image->isValid() ) {
+				$validateErrors = [];
+
+				foreach ( $validImage as $error ) {
+
+					$validateErrors[] = [
+						$img->getClientOriginalName() . ' ' . $error->getMessage()
+					];
+
+					return new JsonResponse( $validateErrors, 500 );
+				}
+			}
+
+			if ( $validImage ) {
+
 				try {
-					$fileName   = $image->getClientOriginalName();
+					$fileName   = $img->getClientOriginalName();
 					$fileExists = $filesystem->has( $this->normalizeFileName( $fileName ) );
 
 					if ( $fileExists ) {
-						$fileParts          = pathinfo( $image->getClientOriginalName() );
+						$fileParts          = pathinfo( $img->getClientOriginalName() );
 						$normalizedFilename = $this->normalizeFileName( $fileName );
 						$newName            = $this->renameExisting( $normalizedFilename, $fileParts['extension'] );
 					} else {
@@ -549,11 +614,15 @@ class TinyPNGBackendController implements ControllerProviderInterface {
 					}
 
 
-					$stream = fopen( $image->getRealPath(), 'r+' );
+					$stream = fopen( $img->getRealPath(), 'r+' );
 					$filesystem->writeStream( '' . $newName, $stream );
 					if ( is_resource( $stream ) ) {
-						$app['logger.flash']
-							->info( "{$newName} has been successfully uploaded" );
+
+						if ( ! $request->isXmlHttpRequest() ) {
+							$app['logger.flash']
+								->info( "{$newName} has been successfully uploaded" );
+						}
+
 						fclose( $stream );
 					}
 
@@ -562,8 +631,7 @@ class TinyPNGBackendController implements ControllerProviderInterface {
 
 
 					if ( $valid ) {
-						$uploadOptimized = $tnypngUpload->tinyPNGDoResize(
-							$newImagePath, $resizeMethod );
+						$tnypngUpload->tinyPNGDoResize( $newImagePath, $resizeMethod );
 					}
 
 				} catch ( IOException $e ) {
@@ -577,11 +645,114 @@ class TinyPNGBackendController implements ControllerProviderInterface {
 
 					return null;
 				}
+
+				$success[] = [
+					'name'             => $newName,
+					'optimizedSize'    => self::bytesToHuman( $filesystem->getSize( $newName ) ),
+					'compressionCount' => $this->getCompressionCount( $app )
+				];
 			}
+
+
 		}
 
-		return new JsonResponse( $uploadOptimized );
+
+		return new JsonResponse( $success );
 	}
+
+	/**
+	 * @param Application $app
+	 * @param Request     $request
+	 * @param Form        $form
+	 *
+	 * @return null|JsonResponse
+	 */
+//	public function uploadImage( Application $app, Request $request, Form $form )
+//	{
+//		$config        = $this->config;
+//		$boltFilesPath = $app['resources']->getPath( 'filespath' );
+//		$adapter       = new Local( $boltFilesPath );
+//		$filesystem    = new Filesystem( $adapter );
+//
+//		$form->handleRequest( $request );
+//		$wrongImageType = $form['file']->getErrors();
+//
+//		$tinypngkey = $config['tinypng_apikey'];
+//
+//		$valid = $this->tinypngValidate( $app, $tinypngkey );
+//
+//		$tnypngUpload = new TinyPNGUpload( $app, $this->config );
+//
+//		$configMethod = isset( $this->config['tinypng_upload']['method'] )
+//			? $this->config['tinypng_upload']['method']
+//			: '';
+//
+//		$resizeMethod = $tnypngUpload->tinyPNGMethod( $configMethod );
+//
+//
+//		if ( ! $form->isValid() ) {
+//			$app['logger.flash']->error( 'TinyPNG File upload failed:: ' . $wrongImageType );
+//
+//			return null;
+//		}
+//
+////		$files = $request->files->get( $form->getName() );
+////		$files = $files['upload'];
+//
+//		$files = $request->files;
+//
+//
+//		$uploadOptimized = [];
+//
+//		// flysystem stream uploads
+//		foreach ( $files as $image ) {
+//			if ( $image->isValid() ) {
+//				try {
+//					$fileName   = $image->getClientOriginalName();
+//					$fileExists = $filesystem->has( $this->normalizeFileName( $fileName ) );
+//
+//					if ( $fileExists ) {
+//						$fileParts          = pathinfo( $image->getClientOriginalName() );
+//						$normalizedFilename = $this->normalizeFileName( $fileName );
+//						$newName            = $this->renameExisting( $normalizedFilename, $fileParts['extension'] );
+//					} else {
+//						$newName = $this->normalizeFileName( $fileName );
+//					}
+//
+//
+//					$stream = fopen( $image->getRealPath(), 'r+' );
+//					$filesystem->writeStream( '' . $newName, $stream );
+//					if ( is_resource( $stream ) ) {
+//						$app['logger.flash']
+//							->info( "{$newName} has been successfully uploaded" );
+//						fclose( $stream );
+//					}
+//
+//
+//					$newImagePath = $boltFilesPath . '/' . $newName;
+//
+//
+//					if ( $valid ) {
+//						$uploadOptimized = $tnypngUpload->tinyPNGDoResize(
+//							$newImagePath, $resizeMethod );
+//					}
+//
+//				} catch ( IOException $e ) {
+//					$message = "The Directory Is Not Writeable. Please Check Your Filesystem Permissions.";
+//
+//					$app['logger.system']->error( $message, [ 'event' => 'upload' ] );
+//
+//					$app['session']
+//						->getFlashBag()
+//						->set( 'error', 'TinyPNG:: ' . $message );
+//
+//					return null;
+//				}
+//			}
+//		}
+//
+//		return new JsonResponse( $uploadOptimized );
+//	}
 
 	/**
 	 * @param $filename
@@ -601,8 +772,27 @@ class TinyPNGBackendController implements ControllerProviderInterface {
 	 */
 	private function renameExisting( $normalizedName, $extension )
 	{
-		return $normalizedName . '_' . date( "Ymd_" ) . uniqid(). '.' . $extension;
+		return $normalizedName . '_' . date( "Ymd_" ) . uniqid() . '.' . $extension;
 	}
 
+
+	private function validateImage( Application $app, $image )
+	{
+		$vConstraints =
+			new Assert\All( [
+				new Assert\Image( [
+					'mimeTypes'        => [
+						'image/jpeg',
+						'image/png',
+						'image/gif'
+					],
+					'mimeTypesMessage' => 'Images Must Be Either a PNG or JPG / JPEG',
+				] )
+			] );
+
+		$validateImage = is_array( $image ) ? $image : array( $image );
+
+		return $app['validator']->validate( $validateImage, $vConstraints );
+	}
 
 }
