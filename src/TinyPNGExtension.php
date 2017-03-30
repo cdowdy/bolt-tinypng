@@ -34,11 +34,14 @@ class TinyPNGExtension extends SimpleExtension {
 			(new JavaScript('tinypng.optimize.js') )
 				->setLate( true )
 				->setPriority( 99 )
-				->setAttributes( ['async'] )
+				->setZone( Zone::BACKEND ),
+			(new Javascript('dropzone.js') )
+				->setLate(true)
+				->setPriority(99)
 				->setZone( Zone::BACKEND ),
 			(new Stylesheet('tinypng.styles.css'))
 				->setPriority(99)
-				->setZone(Zone::BACKEND)
+				->setZone(Zone::BACKEND),
 		];
 	}
 
