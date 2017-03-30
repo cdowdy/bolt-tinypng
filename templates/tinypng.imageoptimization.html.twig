@@ -71,16 +71,43 @@
                 </thead>
                 <tbody>
                 <tr>
-                    <td>
-                        {% form_theme showUpload '_tinypng-forms.html.twig' %}
-                        {{ form_start( showUpload, {
-                            'action': path('tinypng-all-images'),
-                            'method': 'POST',
-                            'attr': {'id': 'tinypng_upload_form'}
-                            })
-                        }}
-                        {{ form_widget( showUpload ) }}
-                        {{ form_end( showUpload ) }}
+                    <td id="tnypng-upload-form-container">
+                        <form name="tnypng_upload"
+                              method="post"
+                              action="{{ path('tinypng-upload-images') }}"
+                              id="tinypng_upload_form"
+                              class="dropzone tnypng-dropzone"
+                              enctype="multipart/form-data">
+                            <fieldset id="form_tinypng">
+                                <div class="fallback">
+                                    <div class="form-group">
+                                        <label class="control-label required"
+                                               for="form_tinypng_file">Upload an Image</label>
+                                        <input type="file"
+                                               id="form_tinypng_file"
+                                               name="tnypng_file[]"
+                                               required="required"
+                                               class="tinypng-inputfile"
+                                               accept="image/jpeg,image/png"
+                                               multiple="multiple"/>
+                                    </div>
+                                    <div class="form-group">
+                                        <button type="submit"
+                                                class="btn btn-primary tinypng-upload">Upload File</button>
+                                    </div>
+                                </div>
+                            </fieldset>
+                        </form>
+                        {#{% form_theme showUpload '_tinypng-forms.html.twig' %}#}
+                        {#{{ form_start( showUpload, {#}
+                            {#'action': path('tinypng_new_upload'),#}
+                            {#'method': 'POST',#}
+                            {#'attr': {'id': 'tinypng_upload_form', 'class' : '', 'data-url' : path('tinypng_new_upload') }#}
+                            {#})#}
+                        {#}}#}
+                        {#{{ form_widget( showUpload ) }}#}
+                        {#{{ form_end( showUpload ) }}#}
+                        {% include "_tinypng-dropzone.html.twig" %}
                     </td>
                     <td>
                         <p><b>Upload Method:</b> {{ uploadMethod }}</p>
@@ -107,7 +134,7 @@
                 <tbody>
 
                 {% for obj, key in tinyPNG_files %}
-                    <tr class="tinyPNG-buttons">
+                    <tr id="tnypng-list-{{ loop.index }}" class="tinyPNG-buttons">
                         <td>
                             <i class="fa fa-fw fa-file-image-o"></i>
                             <a href="{{ key.imagePath|thumbnail(1000, 1000, 'r') }}"
@@ -122,7 +149,7 @@
                             {{ key.imagePath|showimage(54, 40, 'c')|replace({'alt=""': 'alt="' ~ __('general.phrase.thumbnail')|e('html_attr') ~ '"'})|raw }}
                         </td>
                         <td class="hidden-xs hidden-sm">
-                            <strong>{{ key.filesize }}</strong>
+                            <strong id="imgFileSize">{{ key.filesize }}</strong>
                             <div class="image-dimensions">{{ key.imageWidth }}<span class="times">×</span>{{ key.imageHeight }} px</div>
                         </td>
 
@@ -173,6 +200,15 @@
                                         data-target="#{{ loop.index }}-renameModal"
                                         data-optiparam="none">
                                     Optimize &amp; Rename
+                                </button>
+                            </div>
+                            <div class="btn-group">
+                                <button class="btn btn-danger btn-sm tinypng-delete"
+                                        type="button"
+                                        data-imagePath="{{ key.imagePath }}"
+                                        data-rowid="{{ loop.index }}">
+                                    <i class="fa fa-trash" aria-hidden="true"></i>
+                                    Delete Image
                                 </button>
                             </div>
                             <div class="modal fade renameModal" id="{{ loop.index }}-renameModal" tabindex="-1" role="dialog"
