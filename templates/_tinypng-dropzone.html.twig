@@ -1,0 +1,21 @@
+<div id="dropzone-preview" style="display: none;" >
+        <div class="tnypng-dropzone-preview dz-file-preview form-group">
+            <div class="dz-details">
+                {#<div class="dz-filename"><span data-dz-name></span></div>#}
+                {#<div class="dz-size" data-dz-size></div>#}
+                <img class="tnypng-dropzone-img" data-dz-thumbnail/>
+                <div class="tnypng-dropzone-img-name">
+                    <span data-dz-name></span>
+                </div>
+                <div class="progress progress-striped active" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0">
+                    <div class="progress-bar progress-bar-success" style="width:0%;" data-dz-uploadprogress></div>
+                </div>
+            </div>
+
+            {#<div class="dz-success-mark"><span>✔</span></div>#}
+            {#<div class="dz-error-mark"><span>✘</span></div>#}
+            <div class="dz-error-message ">
+                <span  data-dz-errormessage></span>
+            </div>
+        </div>
+</div>
