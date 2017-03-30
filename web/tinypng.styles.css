@@ -29,7 +29,36 @@
 /* makes sure browsers who don't understand the "hidden" attribute actually hide the element */
 *[hidden] { display: none; }
 
-/** tinypng upload form error list **/
+/** main dropzone container #f3f3f3 */
+.tnypng-dropzone {
+    /*background: repeating-linear-gradient(*/
+        /*45deg,*/
+        /*#f3f3f3,*/
+        /*#f3f3f3 10px,*/
+        /*#fff 10px,*/
+        /*#fff 20px*/
+    /*) ;*/
+    border: 2px dashed #ccc;
+    min-height: 150px;
+    padding: 0.625em;
+
+}
+
+.dropzone.dz-started .dz-message {
+    display: none;
+}
+
+.dropzone .dz-message {
+    text-align: center;
+    margin: 2em 0;
+}
+
+.tnypng-dropzone-preview {
+    width: 33%;
+    padding: 0.625em;
+    text-align: center;
+}
+
 .tinypng_form_errors {
     list-style: none;
     padding-left: 0;
@@ -37,3 +66,70 @@
     font-weight: bold;
     color: #a94442;
 }
+
+.dropzone-upload-error {
+    color: #a94442;
+    font-weight: bold;
+}
+
+/* dropzone cancel / remove buttons */
+.dz-remove:link {
+    color: #fff;
+}
+.dz-remove {
+    background-color: #f0ad4e;
+    border-color: #eea236;
+    font-size: 13px;
+    display: inline-block;
+    margin-bottom: 0;
+    font-weight: 400;
+    text-align: center;
+    vertical-align: middle;
+    -ms-touch-action: manipulation;
+    touch-action: manipulation;
+    cursor: pointer;
+    white-space: nowrap;
+    padding: 6px 12px;
+    line-height: 1.42857143;
+    border-radius: 4px;
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
+}
+.dz-remove:hover {
+    color: #fff;
+    text-decoration: none;
+    background-color: #ec971f;
+    border-color: #d58512;
+}
+
+/* dropzone preview area spacing */
+.dz-details {
+    margin-bottom: 0.6353em;
+}
+
+.tnypng-dropzone-img {
+    display: block;
+    margin: 0 auto;
+    padding-bottom: 0.6353em;
+}
+
+/** Animations to delete an image **/
+.removed-item {
+    animation: removed-item-animation .6s cubic-bezier(.55,-0.04,.91,.94) forwards;
+}
+
+@keyframes removed-item-animation {
+    from {
+        opacity: 1;
+        transform: scale(1);
+    }
+
+    to {
+        opacity: 0;
+        transform: scale(0);
+    }
+}
+
+
