@@ -116,11 +116,6 @@ class TinyPNGBackendController implements ControllerProviderInterface {
 		// don't worry about folder structure just dump em all out :)
 		$fileList = $filesystem->listContents( null, true );
 
-		$files = $this->getAllFiles( $app, $fileList );
-
-		// get the compression count :: might wanna change this to use ajax so it's updated after a compression
-		$compressionCount = $this->getCompressionCount( $app );
-
 
 		if ( $request->isMethod( 'POST' ) ) {
 			$this->uploadImage( $app, $request );
@@ -134,9 +129,6 @@ class TinyPNGBackendController implements ControllerProviderInterface {
 			->setTnypngAPIKey( $this->config['tinypng_apikey'] )
 			->setUploadMethod( $uploadMethod );
 
-		// check to see if the tinypng api key is empty
-		$noKey = empty( $configHelper->getTnypngAPIKey() );
-
 
 		$tnyPngUpload = new TinyPNGUpload( $app, $this->config );
 
@@ -148,9 +140,9 @@ class TinyPNGBackendController implements ControllerProviderInterface {
 
 		// context to render in our twig template
 		$context = [
-			'noKey'            => $noKey,
-			'tinyPNG_files'    => $files,
-			'compressionCount' => $compressionCount,
+			'noKey'            => empty( $configHelper->getTnypngAPIKey() ),
+			'tinyPNG_files'    => $this->getAllFiles( $app, $fileList ),
+			'compressionCount' => $this->getCompressionCount( $app ),
 			'uploadMethod'     => $methods,
 			'maxWidth'         => $checkW,
 			'maxHeight'        => $checkH,
