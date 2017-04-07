@@ -9,34 +9,36 @@ $(document).ready(function () {
         click: function (event) {
             var target = event.target;
             var img = target.getAttribute('data-imagePath');
+            var ajaxPath = target.getAttribute('data-tinypngpath');
             var preserveData = target.getAttribute('data-optiparam');
+            var fileSizeUpdate = $("#" + this.id + " #imgFileSize");
 
 
             if (target.classList.contains('tinyPNG-optimize')) {
                 event.preventDefault();
-                optimize(img, preserveData);
+                optimize(img, preserveData, ajaxPath, fileSizeUpdate );
 
             }
 
             if (target.classList.contains('tnypng-copy')) {
                 event.preventDefault();
-                optimize(img, preserveData);
+                optimize(img, preserveData, ajaxPath, fileSizeUpdate );
             }
 
             if (target.classList.contains('tnypng-create')) {
                 event.preventDefault();
-                optimize(img, preserveData);
+                optimize(img, preserveData, ajaxPath, fileSizeUpdate );
             }
 
             if (target.classList.contains('tnypng-location')) {
                 event.preventDefault();
-                optimize(img, preserveData);
+                optimize(img, preserveData, ajaxPath, fileSizeUpdate );
             }
 
 
             if (target.classList.contains('tnypng-allthree')) {
                 event.preventDefault();
-                optimize(img, preserveData);
+                optimize(img, preserveData, ajaxPath, fileSizeUpdate );
 
             }
 
@@ -44,7 +46,7 @@ $(document).ready(function () {
                 event.preventDefault();
                 var containerID = $('#' + this.id);
                 // containerID.addClass("removed-item");
-                deleteImage(img, containerID);
+                deleteImage(img, containerID, ajaxPath);
 
             }
 
@@ -63,7 +65,7 @@ $(document).ready(function () {
                     // form.find(".form-input-container").attr("hidden", true);
                     // form.find(".tnypng-spinner-container").attr("hidden", false);
                     // $(".renameModal").find('.imageToOptimize').text(img + ' is being optimized...');
-                    optimizeRename(img, theName, preserveRadio);
+                    optimizeRename(img, theName, preserveRadio, ajaxPath, fileSizeUpdate );
                     removeRenameSpiner(form, ".form-input-container", ".tnypng-spinner-container", img);
                 }
             }
@@ -85,12 +87,13 @@ $(document).ready(function () {
      * optimize the image with tinypng api
      * @param img - the image to optimize
      * @param preserve - the data to preserve in the dropdown list - location, creation, copyright
+     * @param path - the ajax route
      */
-    var optimize = function (img, preserve) {
+    var optimize = function (img, preserve, path, fileSizeUpdate ) {
         var workingModal = $("#working-modal");
         $.ajax({
             type: "POST",
-            url: $(".dashboardlisting").data("bolt-path") + '/extend/tinypng/optimize',
+            url: path,
             data: {
                 'image': img,
                 'preserve': preserve
@@ -107,7 +110,7 @@ $(document).ready(function () {
             success: function (data) {
                 workingModal.modal("hide");
                 enableButtons();
-                postOptimizeUpdate(data);
+                postOptimizeUpdate(data, fileSizeUpdate);
 
             },
 
@@ -126,10 +129,10 @@ $(document).ready(function () {
      * @param newName  :: the new name we would like to save it as
      * @param preserve :: the data we want to save - location, creation or copyright
      */
-    var optimizeRename = function (img, newName, preserve) {
+    var optimizeRename = function (img, newName, preserve, path, fileSizeUpdate) {
         $.ajax({
             type: "POST",
-            url: $(".dashboardlisting").data("bolt-path") + '/extend/tinypng/optimize/rename',
+            url: path,
             data: {
                 'image': img,
                 'newName': newName,
@@ -144,7 +147,7 @@ $(document).ready(function () {
 
             success: function (data) {
                 enableButtons();
-                postOptimizeUpdate(data);
+                postOptimizeUpdate(data, fileSizeUpdate);
             },
 
             error: function (xhr, desc, err) {
@@ -157,10 +160,11 @@ $(document).ready(function () {
 
     };
 
-    var deleteImage = function (img, containerID) {
+    var deleteImage = function (img, containerID, path) {
         $.ajax({
             type: "POST",
-            url: $(".dashboardlisting").data("bolt-path") + '/extend/tinypng/optimize/delete',
+            // url: $(".dashboardlisting").data("bolt-path") + '/extend/tinypng/optimize/delete',
+            url: path,
             data: {
                 'image': img,
             },
@@ -245,11 +249,11 @@ $(document).ready(function () {
         }
     };
 
-    var postOptimizeUpdate = function (responseObject) {
+    var postOptimizeUpdate = function (responseObject, fileSizeUpdate) {
 
         $.each(responseObject, function (i, obj) {
             $("#compressionCount").text(obj.compressionCount);
-            $("#imgFileSize").text(obj.optimizedSize);
+            fileSizeUpdate.text(obj.optimizedSize);
         });
     };
 
