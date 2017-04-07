@@ -11,12 +11,13 @@
 
 {% block form_row %}
     {% spaceless %}
-        <div class="form-group{% if not valid %} has-error{% endif %}">
+        <div class="form-group fallback{% if not valid %} has-error{% endif %}">
 
             {{ form_label(form ) }}
             {{ form_widget(form) }}
 
             {{ form_errors(form) }}
+            <button  type="submit" class="btn btn-primary tinypng-upload">Upload File</button>
         </div>
 
     {% endspaceless %}
