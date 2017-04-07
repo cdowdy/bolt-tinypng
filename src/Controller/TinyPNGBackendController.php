@@ -60,20 +60,33 @@ class TinyPNGBackendController implements ControllerProviderInterface {
 		$ctr = $app['controllers_factory'];
 
 		// /example/url/in/controller
-		$ctr->match( '/', [ $this, 'allImages' ] )
+		$ctr->match( '/files/{directory}', [ $this, 'allImages' ] )
+		    ->assert( "directory", '.+' )
+		    ->value( "directory", "index" )
 		    ->bind( 'tinypng-all-images' );
 
-		$ctr->post( '/optimize', [ $this, 'optimizeImage' ] )
+		$ctr->post( '/optimize/{directory}', [ $this, 'optimizeImage' ] )
+		    ->assert( "directory", '.+' )
+		    ->value( "directory", "index" )
 		    ->bind( 'tinypng-optimize' );
 
-		$ctr->post( '/optimize/rename', [ $this, 'renameOptimize' ] )
+		$ctr->post( '/rename/{directory}', [ $this, 'renameOptimize' ] )
+		    ->assert( "directory", '.+' )
+		    ->value( "directory", "index" )
 		    ->bind( 'tinypng-rename' );
 
-		$ctr->post( '/optimize/upload', [ $this, 'uploadImage' ] )
+		$ctr->post( '/upload/{directory}', [ $this, 'uploadImage' ] )
+		    ->assert( "directory", '.+' )
+		    ->value( "directory", "index" )
 		    ->bind( 'tinypng-upload-images' );
 
-		$ctr->post( '/optimize/delete', [ $this, 'deleteImage' ] )
+		$ctr->post( '/delete', [ $this, 'deleteImage' ] )
 		    ->bind( 'tinypng-delete-image' );
+
+		$ctr->post( '/create/{directory}', [ $this, 'createDirectory' ] )
+		    ->assert( "directory", '.+' )
+		    ->value( "directory", "index" )
+		    ->bind( 'tinypng-create-directory' );
 
 
 		$ctr->before( [ $this, 'before' ] );
@@ -106,19 +119,32 @@ class TinyPNGBackendController implements ControllerProviderInterface {
 	 *
 	 * @param Request     $request
 	 *
+	 * @param             $directory
+	 *
 	 * @return mixed
 	 */
-	public function allImages( Application $app, Request $request )
+	public function allImages( Application $app, Request $request, $directory )
 	{
 		$filesystem = $this->fsSetup( $app );
 
 		// recursively get all the files under '/files/'
 		// don't worry about folder structure just dump em all out :)
-		$fileList = $filesystem->listContents( null, true );
+//		$fileList = $filesystem->listContents( null, true );
+		if ( $directory == 'index' ) {
+			$fileList = $filesystem->listContents( null, false );
+//			$paths = $filesystem->listContents( null );
+		} else {
+			$fileList = $filesystem->listContents( $directory, false );
+//			$paths = $filesystem->listContents( $directory, true );
+		}
+
+		$paths = $filesystem->listContents( null );
+
+		$dirs = $this->getAllDirectories( $app, $paths );
 
 
 		if ( $request->isMethod( 'POST' ) ) {
-			$this->uploadImage( $app, $request );
+			$this->uploadImage( $app, $request, $directory );
 		}
 
 		$uploadMethod = isset( $this->config['tinypng_upload']['method'] )
@@ -140,16 +166,62 @@ class TinyPNGBackendController implements ControllerProviderInterface {
 
 		// context to render in our twig template
 		$context = [
-			'noKey'            => empty( $configHelper->getTnypngAPIKey() ),
-			'tinyPNG_files'    => $this->getAllFiles( $app, $fileList ),
-			'compressionCount' => $this->getCompressionCount( $app ),
-			'uploadMethod'     => $methods,
-			'maxWidth'         => $checkW,
-			'maxHeight'        => $checkH,
+			'noKey'              => empty( $configHelper->getTnypngAPIKey() ),
+			'tinyPNG_files'      => $this->getAllFiles( $app, $fileList ),
+			'tnypng_directories' => $dirs,
+			'compressionCount'   => $this->getCompressionCount( $app ),
+			'uploadMethod'       => $methods,
+			'maxWidth'           => $checkW,
+			'maxHeight'          => $checkH,
+			'directory'          => $directory,
 		];
 
 		return $app['twig']->render( 'tinypng.imageoptimization.html.twig', $context );
 	}
+
+	protected function getAllDirectories( $app, $fileList )
+	{
+		$filesystem    = $this->fsSetup( $app );
+
+		$files = [];
+
+		foreach ( $fileList as $object ) {
+			if ( $object['type'] == 'dir'
+			     && ! preg_match_all( '/.cache/i', $object['dirname'] )
+			     && ! preg_match_all( '/.cache/i', $object['basename'] )
+			) {
+
+				$listPaths = $filesystem->listContents( $object['path'], true );
+
+				$files[] = [
+					'directory'    => $object,
+					'subdirectory' => $this->listFileSystemPaths( $listPaths )
+				];
+			}
+
+		}
+
+		return $files;
+
+	}
+
+	protected function listFileSystemPaths( $paths )
+	{
+		$pathsList = [];
+
+		foreach ( $paths as $object ) {
+			if ( $object['type'] == 'dir'
+			     && ! preg_match_all( '/.cache/i', $object['dirname'] )
+			     && ! preg_match_all( '/.cache/i', $object['basename'] )
+			) {
+				$pathsList[] = $object['path'];
+			}
+		}
+
+		return $pathsList;
+
+	}
+
 
 	protected function getAllFiles( Application $app, $fileList )
 	{
@@ -234,9 +306,11 @@ class TinyPNGBackendController implements ControllerProviderInterface {
 	 * @param Application $app
 	 * @param Request     $request
 	 *
+	 * @param             $directory
+	 *
 	 * @return JsonResponse
 	 */
-	public function renameOptimize( Application $app, Request $request )
+	public function renameOptimize( Application $app, Request $request, $directory )
 	{
 		$config = $this->config;
 
@@ -255,7 +329,12 @@ class TinyPNGBackendController implements ControllerProviderInterface {
 		// append filespath to the front of the image we are using
 		$imagePath = $filesPath . '/' . $image;
 
-		$newImagePath = $filesPath . '/' . $newImageName;
+		if ( $directory == 'index' ) {
+			$newImagePath = $filesPath . '/' . $newImageName;
+		} else {
+			$newImagePath = $filesPath . '/' . $directory . '/' . $newImageName;
+		}
+
 
 		$tinypngkey = $config['tinypng_apikey'];
 
@@ -490,9 +569,18 @@ class TinyPNGBackendController implements ControllerProviderInterface {
 		return round( $bytes, 2 ) . ' ' . $units[ $i ];
 	}
 
-	public function uploadImage( Application $app, Request $request )
+	public function uploadImage( Application $app, Request $request, $directory )
 	{
-		$config        = $this->config;
+		$config = $this->config;
+
+
+		if ( $directory == 'index' ) {
+//			$boltFilesPath = $app['resources']->getPath( 'filespath' );
+			$uploadDir = '';
+		} else {
+//			$boltFilesPath = $app['resources']->getPath( 'filespath' ) . '/' . $directory ;
+			$uploadDir = $directory . '/';
+		}
 		$boltFilesPath = $app['resources']->getPath( 'filespath' );
 
 		$filesystem = $this->fsSetup( $app );
@@ -543,11 +631,11 @@ class TinyPNGBackendController implements ControllerProviderInterface {
 			if ( $validImage ) {
 
 				try {
-					$fileName   = $img->getClientOriginalName();
+					$fileName   = $uploadDir . $img->getClientOriginalName();
 					$fileExists = $filesystem->has( $this->normalizeFileName( $fileName ) );
 
 					if ( $fileExists ) {
-						$fileParts          = pathinfo( $img->getClientOriginalName() );
+						$fileParts          = pathinfo( $fileName );
 						$normalizedFilename = $this->normalizeFileName( $fileName );
 						$newName            = $this->renameExisting( $normalizedFilename, $fileParts['extension'] );
 					} else {
@@ -556,7 +644,7 @@ class TinyPNGBackendController implements ControllerProviderInterface {
 
 
 					$stream = fopen( $img->getRealPath(), 'r+' );
-					$filesystem->writeStream( '' . $newName, $stream );
+					$filesystem->writeStream( $newName, $stream );
 					if ( is_resource( $stream ) ) {
 
 						if ( ! $request->isXmlHttpRequest() ) {
@@ -609,7 +697,11 @@ class TinyPNGBackendController implements ControllerProviderInterface {
 	 */
 	private function normalizeFileName( $filename )
 	{
-		return trim( preg_replace( '/\s+/', '_', $filename ) );
+		$pathParts      = pathinfo( $filename );
+		$normalized     = trim( preg_replace( '/\s+/', '_', $pathParts['filename'] ) );
+		$normalizedName = $pathParts['dirname'] . '/' . $normalized . '.' . $pathParts['extension'];
+
+		return $normalizedName;
 	}
 
 	/**
@@ -621,6 +713,42 @@ class TinyPNGBackendController implements ControllerProviderInterface {
 	private function renameExisting( $normalizedName, $extension )
 	{
 		return $normalizedName . '_' . date( "Ymd_" ) . uniqid() . '.' . $extension;
+	}
+
+	public function createDirectory( Application $app, Request $request, $directory )
+	{
+		$filesystem = $this->fsSetup( $app );
+		$newDirName = $request->request->get( "tinypngNewDirectory" );
+
+		if ( $directory == 'index' ) {
+//			$boltFilesPath = $app['resources']->getPath( 'filespath' );
+			$currentDir = '';
+		} else {
+//			$boltFilesPath = $app['resources']->getPath( 'filespath' ) . '/' . $directory ;
+			$currentDir = $directory . '/';
+		}
+
+		try {
+			$filesystem->createDir( $currentDir . $newDirName );
+			$app['session']
+				->getFlashbag()
+				->set( 'success', "{$newDirName} Successfully Created!" );
+
+		} catch ( IOException $e ) {
+			$message = "Cannot Create Directory. Please Check Your Filesystem Permissions.";
+
+			$app['logger.system']->error( $message, [ 'event' => 'exception' ] );
+
+			$app['session']
+				->getFlashBag()
+				->set( 'error', 'TinyPNG:: ' . $message );
+
+			return null;
+		}
+
+		$urlGenerator = $app['url_generator'];
+
+		return new RedirectResponse( $urlGenerator->generate( 'tinypng-all-images', [ 'directory' => $directory ] ) );
 	}
 
 
