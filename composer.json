@@ -41,8 +41,10 @@
         "bolt-class": "Bolt\\Extension\\cdowdy\\tinypng\\TinyPNGExtension",
         "bolt-icon": "tinypng-icon.png",
         "bolt-screenshots": [
-            "screenshots/tinypng-dashboard_03232017.png",
+            "screenshots/tinypng-dashboard.png",
+            "screenshots/tinypng-upload.png",
             "screenshots/tinypng-dropdown_0323017.png",
+            "screenshots/tinypng-directories.png",
             "screenshots/tinypng-rename.png",
             "screenshots/tinypng-spinner.png"
         ]
