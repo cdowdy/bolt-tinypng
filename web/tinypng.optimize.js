@@ -1,9 +1,14 @@
 $(document).ready(function () {
 
-
+    /**
+     * our buttons we click on to listen for an event
+     * @type {*}
+     */
     var tinyPNGOptimize = $(".tinyPNG-buttons");
 
-
+    /**
+     *
+     */
     tinyPNGOptimize.on({
 
         click: function (event) {
@@ -88,6 +93,7 @@ $(document).ready(function () {
      * @param img - the image to optimize
      * @param preserve - the data to preserve in the dropdown list - location, creation, copyright
      * @param path - the ajax route
+     * @param fileSizeUpdate
      */
     var optimize = function (img, preserve, path, fileSizeUpdate ) {
         var workingModal = $("#working-modal");
@@ -128,6 +134,10 @@ $(document).ready(function () {
      * @param img :: the actual image saved to the files directory
      * @param newName  :: the new name we would like to save it as
      * @param preserve :: the data we want to save - location, creation or copyright
+     * @param path
+     * @param fileSizeUpdate
+     * @param path
+     * @param fileSizeUpdate
      */
     var optimizeRename = function (img, newName, preserve, path, fileSizeUpdate) {
         $.ajax({
@@ -160,6 +170,12 @@ $(document).ready(function () {
 
     };
 
+    /**
+     *
+     * @param img
+     * @param containerID
+     * @param path
+     */
     var deleteImage = function (img, containerID, path) {
         $.ajax({
             type: "POST",
@@ -191,6 +207,13 @@ $(document).ready(function () {
     };
 
     // remove the spinner in the rename and optimize modal window after a successful ajax request
+    /**
+     *
+     * @param formElement
+     * @param formInputContainer
+     * @param spinnerContainer
+     * @param imageToOptimize
+     */
     var removeRenameSpiner = function (formElement, formInputContainer, spinnerContainer, imageToOptimize) {
         var renameModal = $(".renameModal");
 
@@ -249,6 +272,11 @@ $(document).ready(function () {
         }
     };
 
+    /**
+     *
+     * @param responseObject
+     * @param fileSizeUpdate
+     */
     var postOptimizeUpdate = function (responseObject, fileSizeUpdate) {
 
         $.each(responseObject, function (i, obj) {
@@ -258,6 +286,10 @@ $(document).ready(function () {
     };
 
 
+    /**
+     *
+     * @type {{paramName: string, acceptedFiles: string, thumbnailWidth: number, thumbnailHeight: null, previewTemplate: string, addRemoveLinks: boolean, accept: Dropzone.options.tinypngUploadForm.accept, init: Dropzone.options.tinypngUploadForm.init}}
+     */
     Dropzone.options.tinypngUploadForm = {
         paramName: "tnypng_file", // The name that will be used to transfer the file
         // maxFilesize: 2, // MB
