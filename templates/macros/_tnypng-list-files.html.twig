@@ -1,0 +1,74 @@
+{#
+ # The Image name inside a maginfic popup lightbox
+#}
+{% macro tinypngFileName(key) %}
+    <i class="fa fa-fw fa-file-image-o"></i>
+    <a href="{{ key.imagePath|thumbnail(1000, 1000, 'r') }}"
+       class="magnific"
+       title="Image: {{ key.filename }}">
+        <strong>{{ key.filename }}</strong>
+    </a>
+    <br>
+    <strong>Location:</strong> {% if key.located %}{{ key.located }}{% else %}Files{% endif %}
+{% endmacro tinypngFileName %}
+
+{#
+ # The Image preview thumbnail
+#}
+{% macro tinypngThumb(key) %}
+{{ key.imagePath|showimage(54, 40, 'c')|replace({'alt=""': 'alt="' ~ __('general.phrase.thumbnail')|e('html_attr') ~ '"'})|raw }}
+{% endmacro tinypngThumb %}
+
+
+{#
+ # The Image's file size and dimensions
+#}
+{% macro tinypngFileSize(key) %}
+<strong id="imgFileSize">{{ key.filesize }}</strong>
+<div class="image-dimensions">{{ key.imageWidth }}<span class="times">×</span>{{ key.imageHeight }} px</div>
+{% endmacro tinypngFileSize %}
+
+
+
+{% macro tinypngButton(key, param, ajaxPath) %}
+
+{% endmacro tinypngButton %}
+
+
+
+{% macro tnypngFileList(tinyPNG_files, directory) %}
+    {% import _self as build %}
+
+{% for obj, key in tinyPNG_files %}
+    <tr id="tnypng-list-{{ loop.index }}" class="tinyPNG-buttons">
+        <td>
+            {{ build.tinypngFileName(key) }}
+        </td>
+        <td class="listthumb">
+          {{ build.tinypngThumb(key) }}
+        </td>
+        <td class="hidden-xs hidden-sm">
+         {{ build.tinypngFileSize(key) }}
+        </td>
+
+        <td>
+            <div class="btn-group">
+                {# regular optmize button #}
+                {% include "buttons/_tnypng_optimize-button.html.twig" %}
+                {# dropdown button with the "preserve" options #}
+                {% include "buttons/_tnypng_preserve-dropdown.html.twig" %}
+            </div>
+            {# rename and optimize button #}
+            {% include "buttons/_tnypng-rename.html.twig" %}
+
+            {# delete button include #}
+            {% include "buttons/_tnypng_delete.html.twig" %}
+
+            {# modal for the optmize and rename -- should refactor this so only one is on the page#}
+
+            {% include "modals/_tnypng_renamemodal.html.twig" with {'directory' : directory} %}
+
+        </td>
+    </tr>
+{% endfor %}
+{% endmacro tnypngFileList %}
