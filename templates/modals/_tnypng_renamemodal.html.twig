@@ -1,0 +1,118 @@
+<div class="modal fade renameModal" id="{{ loop.index }}-renameModal" tabindex="-1" role="dialog"
+     aria-labelledby="{{ loop.index }}-modal-label">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button class="close" data-dismiss="modal"
+                        aria-label="Close"><span aria-hidden="true">&times;</span>
+                </button>
+                <h4 class="modal-title" id="{{ loop.index }}-modal-label">Optimize &amp
+                    Rename: {{ key.filename }}</h4>
+            </div>
+            <div class="modal-body">
+                <p>
+                    This will optimize your image and save it under the name you choose
+                    below in the text input box.
+                </p>
+                <form class="form-horizontal" id="{{ loop.index }}-rename-form"
+                      method="POST"
+                      action="{{ path('tinypng-rename', { 'directory' : directory }) }}">
+                    <div class="form-input-container">
+                        <div class="form-group">
+                            <label for="newname"
+                                   class="col-sm-2 control-label">Name
+                            </label>
+                            <div class="col-sm-10">
+                                <input type="text" class="form-control new-name-input"
+                                       id="{{ loop.index }}-newname"
+                                       name="newname"
+                                       placeholder="Enter New Image Name">
+                                <p class="input-error" style="color: #a94442" hidden>
+                                    Please Enter A New Image Name
+                                </p>
+                            </div>
+                        </div>
+                        <p>Data to Preserve: </p>
+                        <div class="radio">
+                            <label>
+                                <input type="radio"
+                                       name="preserveOption"
+                                       id="{{ loop.index }}-rename-none" value="none"
+                                       data-optiparam="none"
+                                       autocomplete="off" checked>
+                                None
+                            </label>
+                        </div>
+                        <div class="radio">
+                            <label>
+                                <input type="radio"
+                                       name="preserveOption"
+                                       id="{{ loop.index }}-rename-copy"
+                                       value="copyright"
+                                       data-optiparam="copyright"
+                                       autocomplete="off">
+                                Copyright
+                            </label>
+                        </div>
+                        <div class="radio">
+                            <label>
+                                <input type="radio"
+                                       name="preserveOption"
+                                       id="{{ loop.index }}-rename-creation"
+                                       value="creation"
+                                       data-optiparam="creation"
+                                       autocomplete="off">
+                                Creation
+                            </label>
+                        </div>
+                        <div class="radio">
+                            <label>
+                                <input type="radio"
+                                       name="preserveOption"
+                                       id="{{ loop.index }}-rename-location"
+                                       value="location"
+                                       data-optiparam="location"
+                                       autocomplete="off">
+                                Location
+                            </label>
+                        </div>
+                        <div class="radio">
+                            <label>
+                                <input type="radio"
+                                       name="preserveOption"
+                                       id="{{ loop.index }}-rename-all"
+                                       value="all"
+                                       data-optiparam="all"
+                                       autocomplete="off">
+                                All Three
+                            </label>
+                        </div>
+                        <div class="form-group">
+                            <div class="col-sm-offset-2 col-sm-10">
+                                <button type="submit"
+                                        class="btn btn-default tnypng-submit"
+                                        data-imagePath="{{ key.imagePath }}" data-tinypngpath="{{ path('tinypng-rename', { 'directory' : directory }) }}">Save &amp
+                                    Optimize
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="tnypng-spinner-container" hidden>
+                        <svg class="bolt-spinner" viewBox="0 0 100 100">
+                            <use xlink:href="#bolt-spinner"/>
+                        </svg>
+                        <p class="imageToOptimize">
+
+                        </p>
+                    </div>
+
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-default" data-dismiss="modal">
+                    Cancel
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
