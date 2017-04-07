@@ -50,7 +50,7 @@ class TinyPNGExtension extends SimpleExtension {
 	 * @return array
 	 */
 	protected function registerMenuEntries() {
-		$menu = new MenuEntry( 'tinypng-menu', 'tinypng' );
+		$menu = new MenuEntry( 'tinypng-menu', 'tinypng/files' );
 		$menu->setLabel( 'TinyPNG Image Optimization' )
 		     ->setIcon( 'fa:image' )
 		     ->setPermission( 'settings' );
