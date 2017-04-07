@@ -1,0 +1,27 @@
+<form name="tnypng_upload"
+      method="post"
+      action="{{ path('tinypng-upload-images', { 'directory': directory }) }}"
+      id="tinypng_upload_form"
+      class="dropzone tnypng-dropzone"
+      enctype="multipart/form-data">
+    <fieldset id="form_tinypng">
+        <div class="fallback">
+            <div class="form-group">
+                <label class="control-label required"
+                       for="form_tinypng_file">Upload an Image</label>
+                <input type="file"
+                       id="form_tinypng_file"
+                       name="tnypng_file[]"
+                       required="required"
+                       class="tinypng-inputfile"
+                       accept="image/jpeg,image/png"
+                       multiple="multiple"/>
+            </div>
+            <div class="form-group">
+                <button type="submit"
+                        class="btn btn-primary tinypng-upload">Upload File</button>
+            </div>
+        </div>
+    </fieldset>
+</form>
+{% include "_tinypng-dropzone.html.twig" %}
