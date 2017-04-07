@@ -1,0 +1,34 @@
+<button type="button" class="btn btn-default btn-sm dropdown-toggle tinyPNG-dropdown"
+        data-toggle="dropdown"
+        aria-haspopup="true"
+        aria-expanded="false">
+    <span class="caret"></span>
+    <span class="sr-only">Toggle Dropdown</span>
+</button>
+<ul class="dropdown-menu">
+    <li>
+        <a class="tnypng-copy" href="#"
+           data-imagePath="{{ key.imagePath }}"
+           data-optiparam="copyright"
+           data-tinypngpath="{{ path("tinypng-optimize") }}">Preserve Copyright</a>
+    </li>
+    <li>
+        <a class="tnypng-create" href="#"
+           data-imagePath="{{ key.imagePath }}"
+           data-optiparam="creation"
+           data-tinypngpath="{{ path("tinypng-optimize") }}">Preserve Creation</a>
+    </li>
+    <li>
+        <a class="tnypng-location" href="#"
+           data-imagePath="{{ key.imagePath }}"
+           data-optiparam="location"
+           data-tinypngpath="{{ path("tinypng-optimize") }}">Preserve Location</a>
+    </li>
+    <li>
+        <a class="tnypng-allthree"
+           href="#"
+           data-imagePath="{{ key.imagePath }}"
+           data-optiparam="all"
+           data-tinypngpath="{{ path("tinypng-optimize") }}">Preserve All Three (3)</a>
+    </li>
+</ul>
