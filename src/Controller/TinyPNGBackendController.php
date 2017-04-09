@@ -576,7 +576,7 @@ class TinyPNGBackendController implements ControllerProviderInterface {
 
 		if ( $directory == 'index' ) {
 //			$boltFilesPath = $app['resources']->getPath( 'filespath' );
-			$uploadDir = '';
+			$uploadDir = null;
 		} else {
 //			$boltFilesPath = $app['resources']->getPath( 'filespath' ) . '/' . $directory ;
 			$uploadDir = $directory . '/';
@@ -637,7 +637,7 @@ class TinyPNGBackendController implements ControllerProviderInterface {
 					if ( $fileExists ) {
 						$fileParts          = pathinfo( $fileName );
 						$normalizedFilename = $this->normalizeFileName( $fileName );
-						$newName            = $this->renameExisting( $normalizedFilename, $fileParts['extension'] );
+						$newName            = $this->renameExisting( $normalizedFilename, $uploadDir, $fileParts['extension'] );
 					} else {
 						$newName = $this->normalizeFileName( $fileName );
 					}
@@ -710,9 +710,14 @@ class TinyPNGBackendController implements ControllerProviderInterface {
 	 *
 	 * @return string
 	 */
-	private function renameExisting( $normalizedName, $extension )
+	private function renameExisting( $normalizedName, $directory, $extension )
 	{
-		return $normalizedName . '_' . date( "Ymd_" ) . uniqid() . '.' . $extension;
+		$parts = pathinfo($normalizedName);
+		$fileName =  isset( $directory )
+			? $directory . $parts['filename']
+			: $parts['filename'];
+
+		return $fileName . '_' . date( "Ymd_" ) . uniqid() . '.' . $extension;
 	}
 
 	public function createDirectory( Application $app, Request $request, $directory )
