@@ -181,7 +181,7 @@ class TinyPNGBackendController implements ControllerProviderInterface {
 
 	protected function getAllDirectories( $app, $fileList )
 	{
-		$filesystem    = $this->fsSetup( $app );
+		$filesystem = $this->fsSetup( $app );
 
 		$files = [];
 
@@ -637,7 +637,8 @@ class TinyPNGBackendController implements ControllerProviderInterface {
 					if ( $fileExists ) {
 						$fileParts          = pathinfo( $fileName );
 						$normalizedFilename = $this->normalizeFileName( $fileName );
-						$newName            = $this->renameExisting( $normalizedFilename, $uploadDir, $fileParts['extension'] );
+						$newName            = $this->renameExisting( $normalizedFilename, $uploadDir,
+							$fileParts['extension'] );
 					} else {
 						$newName = $this->normalizeFileName( $fileName );
 					}
@@ -712,8 +713,8 @@ class TinyPNGBackendController implements ControllerProviderInterface {
 	 */
 	private function renameExisting( $normalizedName, $directory, $extension )
 	{
-		$parts = pathinfo($normalizedName);
-		$fileName =  isset( $directory )
+		$parts    = pathinfo( $normalizedName );
+		$fileName = isset( $directory )
 			? $directory . $parts['filename']
 			: $parts['filename'];
 
