@@ -16,7 +16,7 @@ $(document).ready(function () {
             var img = target.getAttribute('data-imagePath');
             var ajaxPath = target.getAttribute('data-tinypngpath');
             var preserveData = target.getAttribute('data-optiparam');
-            var fileSizeUpdate = $("#" + this.id + " #imgFileSize");
+            var fileSizeUpdate = $("#" + this.id + " .imgFileSize");
 
 
             if (target.classList.contains('tinyPNG-optimize')) {
