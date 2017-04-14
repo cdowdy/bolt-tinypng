@@ -24,7 +24,7 @@
  # The Image's file size and dimensions
 #}
 {% macro tinypngFileSize(key) %}
-<strong id="imgFileSize">{{ key.filesize }}</strong>
+<strong class="imgFileSize">{{ key.filesize }}</strong>
 <div class="image-dimensions">{{ key.imageWidth }}<span class="times">×</span>{{ key.imageHeight }} px</div>
 {% endmacro tinypngFileSize %}
 
