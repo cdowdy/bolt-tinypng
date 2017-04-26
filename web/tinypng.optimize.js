@@ -314,8 +314,19 @@ $(document).ready(function () {
             this.on("success", function (file, response, xhr) {
 
                 $.each(response, function (i, obj) {
-                    $("#filelist").html("<p>" + obj.name + "</p>");
+
                     $("#compressionCount").text(obj.compressionCount);
+
+                    var template = $('#tinypng-upload-insert').html();
+                    var $template = $(template);
+
+                    $template.find('.magnific').attr('href', '/thumbs/1000x1000r/' + obj.name );
+                    $template.find('.magnific').attr('title', 'Image: ' + obj.name );
+                    $template.find('.tinypng-uploadeName').text( obj.name );
+                    $template.find('.tinypng-listthumb').attr('src', '/thumbs/54x40c/' + obj.name );
+                    $template.find('.imgFileSize').text(obj.optimizedSize );
+                    // {{ key.imageWidth }}<span class="times">×</span>{{ key.imageHeight }} px
+                    $("#tinypng-uploaded-files").prepend($template);
                 });
 
 
