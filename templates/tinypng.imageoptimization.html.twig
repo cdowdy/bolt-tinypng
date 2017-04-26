@@ -102,6 +102,29 @@
             </ul>
             <div class="tab-content">
                 <div id="tinypng-file-list" role="tabpanel" class="tab-pane active">
+                    {# after an ajax upload use this template to place the file in the list #}
+                    <script id="tinypng-upload-insert" type="x-template">
+                        <tr class="tinyPNG-buttons">
+                            <td>
+                                <i class="fa fa-fw fa-file-image-o"></i>
+                                <a class="magnific">
+                                    <strong class="tinypng-uploadeName"></strong>
+                                </a>
+                                <br>
+                            </td>
+                            <td class="listthumb">
+                                <img class="tinypng-listthumb" width="54" height="40" alt="Thumbnail">
+                            </td>
+                            <td class="hidden-xs hidden-sm">
+                                <strong class="imgFileSize"></strong>
+                                <div class="image-dimensions"></div>
+                            </td>
+
+                            <td>
+                            </td>
+                        </tr>
+                    </script>
+
                     <table  class="dashboardlisting" data-bolt-path="{{ path('dashboard') }}">
                         <thead>
                         <tr>
@@ -111,7 +134,8 @@
                             <th>Optimize</th>
                         </tr>
                         </thead>
-                        <tbody>
+                        <tbody id="tinypng-uploaded-files">
+
                         {% if tinyPNG_files %}
 
                             {% import "macros/_tnypng-list-files.html.twig" as list %}
