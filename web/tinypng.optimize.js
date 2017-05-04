@@ -296,7 +296,7 @@ $(document).ready(function () {
         acceptedFiles: 'image/png,image/jpeg',
         thumbnailWidth: 80,
         thumbnailHeight: null,
-        previewTemplate: document.getElementById('dropzone-preview').innerHTML,
+        previewTemplate: $('#dropzone-preview').html(),
         addRemoveLinks: true,
         accept: function (file, done) {
             done();
