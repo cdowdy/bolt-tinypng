@@ -141,7 +141,7 @@ class ConfigHelper {
 	/**
 	 * @return array
 	 */
-	public function getMetadata(): array
+	public function getMetadata()
 	{
 		return $this->_metadata;
 	}
@@ -152,7 +152,7 @@ class ConfigHelper {
 	 *
 	 * @return ConfigHelper
 	 */
-	public function setMetadata( array $metadata ): ConfigHelper
+	public function setMetadata( array $metadata )
 	{
 		$this->_metadata = $metadata;
 
