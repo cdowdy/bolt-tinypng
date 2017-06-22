@@ -1,7 +1,7 @@
 {% extends '_base/_page-nav.twig' %}
 {% from '@bolt/_buic/_moment.twig' import buic_moment %}
 
-{% block page_nav title %}
+
 
 {% block page_title __("TinyPNG & TinyJPG Image Optimization for Bolt") %}
 
@@ -196,9 +196,9 @@
 
 
         </div><!-- /.col-xs-12 file list table container -->
-        <div class="col-xs-12 ajax-error">
-            {{ message }}
-        </div>
+        {#<div class="col-xs-12 ajax-error">#}
+            {#{{ message }}#}
+        {#</div>#}
 
         {% include '_tinypng-working-modal.twig' %}
 
