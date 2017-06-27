@@ -1,3 +1,5 @@
+Dropzone.autoDiscover = false;
+
 $(document).ready(function () {
 
     /**
@@ -290,7 +292,7 @@ $(document).ready(function () {
      *
      * @type {{paramName: string, acceptedFiles: string, thumbnailWidth: number, thumbnailHeight: null, previewTemplate: string, addRemoveLinks: boolean, accept: Dropzone.options.tinypngUploadForm.accept, init: Dropzone.options.tinypngUploadForm.init}}
      */
-    Dropzone.options.tinypngUploadForm = {
+    $('#tinypng_upload_form').dropzone({
         paramName: "tnypng_file", // The name that will be used to transfer the file
         // maxFilesize: 2, // MB
         acceptedFiles: 'image/png,image/jpeg',
@@ -343,7 +345,7 @@ $(document).ready(function () {
                 errorContainer.text(errorMessage).addClass("alert alert-danger");
             });
         }
-    };
+    });
 
 });
 
