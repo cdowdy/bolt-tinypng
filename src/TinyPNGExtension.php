@@ -11,7 +11,7 @@ if ( is_file( $autoload ) ) {
 use Bolt\Asset\File\JavaScript;
 use Bolt\Asset\File\Stylesheet;
 use Bolt\Controller\Zone;
-
+use Bolt\Version as Version;
 use Bolt\Extension\cdowdy\tinypng\Controller\TinyPNGBackendController;
 use Bolt\Extension\SimpleExtension;
 use Bolt\Menu\MenuEntry;
@@ -67,9 +67,15 @@ class TinyPNGExtension extends SimpleExtension {
 	protected function registerBackendControllers() {
 		$config = $this->getConfig();
 
-		return [
-			'/extend/tinypng' => new TinyPNGBackendController( $config ),
-		];
+        if ( Version::compare('3.3.0', '>=')) {
+            return [
+                '/extensions/tinypng' => new TinyPNGBackendController($config),
+            ];
+        } else {
+            return [
+                '/extend/tinypng' => new TinyPNGBackendController($config),
+            ];
+        }
 	}
 
 	/**
