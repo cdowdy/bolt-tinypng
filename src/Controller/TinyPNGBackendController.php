@@ -6,6 +6,8 @@ namespace Bolt\Extension\cdowdy\tinypng\Controller;
 use Bolt\Extension\cdowdy\tinypng\Handler\TinyPNGUpload;
 use Bolt\Extension\cdowdy\tinypng\Helpers\ConfigHelper;
 use Bolt\Filesystem\Exception\IOException;
+use Bolt\Version as Version;
+
 use League\Flysystem\Adapter\Local;
 use League\Flysystem\Filesystem;
 use Silex\Application;
@@ -39,6 +41,7 @@ class TinyPNGBackendController implements ControllerProviderInterface {
 	{
 		$this->config = $config;
 	}
+
 
 	/**
 	 * Specify which method handles which route.
@@ -94,6 +97,7 @@ class TinyPNGBackendController implements ControllerProviderInterface {
 		return $ctr;
 	}
 
+
 	/**
 	 * @param Request     $request
 	 * @param Application $app
@@ -113,6 +117,7 @@ class TinyPNGBackendController implements ControllerProviderInterface {
 
 		return null;
 	}
+
 
 	/**
 	 * @param Application $app
@@ -179,6 +184,12 @@ class TinyPNGBackendController implements ControllerProviderInterface {
 		return $app['twig']->render( 'tinypng.imageoptimization.html.twig', $context );
 	}
 
+
+    /**
+     * @param $app
+     * @param $fileList
+     * @return array
+     */
 	protected function getAllDirectories( $app, $fileList )
 	{
 		$filesystem = $this->fsSetup( $app );
@@ -223,10 +234,16 @@ class TinyPNGBackendController implements ControllerProviderInterface {
 	}
 
 
+    /**
+     * @param Application $app
+     * @param $fileList
+     * @return array
+     */
 	protected function getAllFiles( Application $app, $fileList )
 	{
 		$filesystem    = $this->fsSetup( $app );
-		$boltFilesPath = $app['resources']->getPath( 'filespath' );
+
+        $boltFilesPath = $this->boltFilesPath($app);
 		$expectedMimes = $this->checkAccpetedTypes();
 		$files         = [];
 
@@ -259,6 +276,7 @@ class TinyPNGBackendController implements ControllerProviderInterface {
 		return $files;
 	}
 
+
 	/**
 	 * @param Application $app
 	 * @param Request     $request
@@ -274,8 +292,8 @@ class TinyPNGBackendController implements ControllerProviderInterface {
 		$preserveOptions = $request->get( 'preserve' );
 
 		// get bolts filepath - can be changed by the user
-		$filesPath = $app['resources']->getpath( 'filespath' );
-
+//		$filesPath = $app['resources']->getpath( 'filespath' );
+        $filesPath = $this->boltFilesPath( $app );
 
 		$filesystem = $this->fsSetup( $app );
 
@@ -321,8 +339,8 @@ class TinyPNGBackendController implements ControllerProviderInterface {
 
 
 		// get bolts filepath - can be changed by the user
-		$filesPath = $app['resources']->getpath( 'filespath' );
-
+//		$filesPath = $app['resources']->getpath( 'filespath' );
+        $filesPath = $this->boltFilesPath( $app );
 
 		$filesystem = $this->fsSetup( $app );
 
@@ -355,6 +373,12 @@ class TinyPNGBackendController implements ControllerProviderInterface {
 		return new JsonResponse( $optimized );
 	}
 
+
+    /**
+     * @param Application $app
+     * @param Request $request
+     * @return JsonResponse
+     */
 	public function deleteImage( Application $app, Request $request )
 	{
 		$filesystem = $this->fsSetup( $app );
@@ -363,9 +387,25 @@ class TinyPNGBackendController implements ControllerProviderInterface {
 		return new JsonResponse( $filesystem->delete( $image ), 200 );
 	}
 
+
+    /**
+     * @param Application $app
+     * @return Filesystem
+     */
 	private function fsSetup( Application $app )
 	{
-		$boltFilesPath = $app['resources']->getPath( 'filespath' );
+	    // for bolt's new filesystem since $app['resources'] and getPath() are deprecated in 3.3+
+        // and will be removed in 4.0
+
+//        if (Version::compare( '3.3.0', '>=')) {
+//            $boltFilesPath =  $app['path_resolver']->resolve('files');
+//        } else {
+//            $boltFilesPath = $app['resources']->getPath( 'filespath' );
+//
+//        }
+
+        $boltFilesPath = $this->boltFilesPath($app);
+
 		$adapter       = new Local( $boltFilesPath );
 		$filesystem    = new Filesystem( $adapter );
 
@@ -394,6 +434,7 @@ class TinyPNGBackendController implements ControllerProviderInterface {
 
 		return $comressionsThisMonth;
 	}
+
 
 	/**
 	 * @param Application $app
@@ -492,6 +533,7 @@ class TinyPNGBackendController implements ControllerProviderInterface {
 		return $optimized;
 	}
 
+
 	/**
 	 * @param $image
 	 * @param $newName
@@ -510,6 +552,7 @@ class TinyPNGBackendController implements ControllerProviderInterface {
 		}
 
 	}
+
 
 	/**
 	 * @param $data
@@ -569,20 +612,27 @@ class TinyPNGBackendController implements ControllerProviderInterface {
 		return round( $bytes, 2 ) . ' ' . $units[ $i ];
 	}
 
+
+    /**
+     * @param Application $app
+     * @param Request $request
+     * @param $directory
+     * @return null|JsonResponse
+     */
 	public function uploadImage( Application $app, Request $request, $directory )
 	{
 		$config = $this->config;
 
 
 		if ( $directory == 'index' ) {
-//			$boltFilesPath = $app['resources']->getPath( 'filespath' );
+
 			$uploadDir = null;
 		} else {
-//			$boltFilesPath = $app['resources']->getPath( 'filespath' ) . '/' . $directory ;
+
 			$uploadDir = $directory . '/';
 		}
-		$boltFilesPath = $app['resources']->getPath( 'filespath' );
-
+//		$boltFilesPath = $app['resources']->getPath( 'filespath' );
+        $boltFilesPath = $this->boltFilesPath($app);
 		$filesystem = $this->fsSetup( $app );
 
 		$tinypngkey = $config['tinypng_apikey'];
@@ -721,16 +771,23 @@ class TinyPNGBackendController implements ControllerProviderInterface {
 		return $fileName . '_' . date( "Ymd_" ) . uniqid() . '.' . $extension;
 	}
 
+
+    /**
+     * @param Application $app
+     * @param Request $request
+     * @param $directory
+     * @return null|RedirectResponse
+     */
 	public function createDirectory( Application $app, Request $request, $directory )
 	{
 		$filesystem = $this->fsSetup( $app );
 		$newDirName = $request->request->get( "tinypngNewDirectory" );
 
 		if ( $directory == 'index' ) {
-//			$boltFilesPath = $app['resources']->getPath( 'filespath' );
+
 			$currentDir = '';
 		} else {
-//			$boltFilesPath = $app['resources']->getPath( 'filespath' ) . '/' . $directory ;
+
 			$currentDir = $directory . '/';
 		}
 
@@ -758,6 +815,11 @@ class TinyPNGBackendController implements ControllerProviderInterface {
 	}
 
 
+    /**
+     * @param Application $app
+     * @param $image
+     * @return mixed
+     */
 	private function validateImage( Application $app, $image )
 	{
 		$vConstraints =
@@ -776,5 +838,17 @@ class TinyPNGBackendController implements ControllerProviderInterface {
 
 		return $app['validator']->validate( $validateImage, $vConstraints );
 	}
+
+
+	private function boltFilesPath( Application $app )
+    {
+
+        if (Version::compare( '3.3.0', '>=')) {
+            return $app['path_resolver']->resolve('files');
+        } else {
+            return $app['resources']->getPath( 'filespath' );
+
+        }
+    }
 
 }
