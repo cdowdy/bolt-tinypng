@@ -5,6 +5,7 @@ namespace Bolt\Extension\cdowdy\tinypng\Controller;
 
 use Bolt\Extension\cdowdy\tinypng\Handler\TinyPNGUpload;
 use Bolt\Extension\cdowdy\tinypng\Helpers\ConfigHelper;
+use Bolt\Extension\cdowdy\tinypng\Helpers\FilePathHelper;
 use Bolt\Filesystem\Exception\IOException;
 use Bolt\Version as Version;
 
@@ -243,7 +244,7 @@ class TinyPNGBackendController implements ControllerProviderInterface {
 	{
 		$filesystem    = $this->fsSetup( $app );
 
-        $boltFilesPath = $this->boltFilesPath($app);
+        $boltFilesPath = (new FilePathHelper( $app ) )->boltFilesPath() ;
 		$expectedMimes = $this->checkAccpetedTypes();
 		$files         = [];
 
@@ -293,7 +294,7 @@ class TinyPNGBackendController implements ControllerProviderInterface {
 
 		// get bolts filepath - can be changed by the user
 //		$filesPath = $app['resources']->getpath( 'filespath' );
-        $filesPath = $this->boltFilesPath( $app );
+        $filesPath = (new FilePathHelper( $app ) )->boltFilesPath() ;
 
 		$filesystem = $this->fsSetup( $app );
 
@@ -340,7 +341,7 @@ class TinyPNGBackendController implements ControllerProviderInterface {
 
 		// get bolts filepath - can be changed by the user
 //		$filesPath = $app['resources']->getpath( 'filespath' );
-        $filesPath = $this->boltFilesPath( $app );
+        $filesPath = (new FilePathHelper( $app ) )->boltFilesPath() ;
 
 		$filesystem = $this->fsSetup( $app );
 
@@ -404,7 +405,8 @@ class TinyPNGBackendController implements ControllerProviderInterface {
 //
 //        }
 
-        $boltFilesPath = $this->boltFilesPath($app);
+//        $boltFilesPath = $this->boltFilesPath($app);
+        $boltFilesPath = (new FilePathHelper( $app ) )->boltFilesPath() ;
 
 		$adapter       = new Local( $boltFilesPath );
 		$filesystem    = new Filesystem( $adapter );
@@ -632,7 +634,8 @@ class TinyPNGBackendController implements ControllerProviderInterface {
 			$uploadDir = $directory . '/';
 		}
 //		$boltFilesPath = $app['resources']->getPath( 'filespath' );
-        $boltFilesPath = $this->boltFilesPath($app);
+//        $boltFilesPath = $this->boltFilesPath($app);
+        $boltFilesPath = (new FilePathHelper( $app ) )->boltFilesPath() ;
 		$filesystem = $this->fsSetup( $app );
 
 		$tinypngkey = $config['tinypng_apikey'];
@@ -839,16 +842,5 @@ class TinyPNGBackendController implements ControllerProviderInterface {
 		return $app['validator']->validate( $validateImage, $vConstraints );
 	}
 
-
-	private function boltFilesPath( Application $app )
-    {
-
-        if (Version::compare( '3.3.0', '>=')) {
-            return $app['path_resolver']->resolve('files');
-        } else {
-            return $app['resources']->getPath( 'filespath' );
-
-        }
-    }
 
 }
