@@ -17,3 +17,40 @@
                 class="btn btn-default">Create Directory</button>
     </form>
 </div>
+
+<div>
+    <h2>Delete Directory</h2>
+    <div class="alert alert-danger">
+        <p style="color: #800000">
+            This will remove/delete the directory chosen below. Everything contained in this directory will be deleted and non recoverable. Proceed with caution.
+        </p>
+    </div>
+
+    <form class="form-inline"
+          name="tinypng_delete_directory"
+          method="POST"
+          action="{{ path('tinypng-delete-directory', { 'directory' : directory }) }}">
+        <div class="form-group">
+            <label class="sr-only"
+                   for="tinypngDeleteDirectory">Delete A Directory</label>
+            <input class="form-control"
+                   id="tinypngDeleteDirectory"
+                   name="tinypngDeleteDirectory"
+                   placeholder="Delete A Directory"
+                   list="betterthumbsDirectoryList">
+
+            <datalist id="betterthumbsDirectoryList">
+             {% for key, value in tnypng_directories %}
+                 <option>{{ value.directory.path  }}</option>
+                    {% if value.subdirectory %}
+                        {% for key, value in value.subdirectory %}
+                 <option >{{ value }}</option>
+                        {% endfor %}
+                    {% endif %}
+                {% endfor %}
+            </datalist>
+        </div>
+        <button type="submit"
+                class="btn btn-danger">Delete Directory</button>
+    </form>
+</div>

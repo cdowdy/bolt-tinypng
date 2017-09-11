@@ -92,6 +92,11 @@ class TinyPNGBackendController implements ControllerProviderInterface {
 		    ->value( "directory", "index" )
 		    ->bind( 'tinypng-create-directory' );
 
+		$ctr->post( '/directory-delete/{directory}', [$this, 'deleteDirectory'] )
+            ->assert( "directory", '.+' )
+            ->value( "directory", "index")
+            ->bind('tinypng-delete-directory');
+
 
 		$ctr->before( [ $this, 'before' ] );
 
@@ -816,6 +821,42 @@ class TinyPNGBackendController implements ControllerProviderInterface {
 
 		return new RedirectResponse( $urlGenerator->generate( 'tinypng-all-images', [ 'directory' => $directory ] ) );
 	}
+
+    /**
+     * @param Application $app
+     * @param Request $request
+     * @param $directory
+     * @return null|RedirectResponse
+     */
+	public function deleteDirectory( Application $app, Request $request, $directory )
+    {
+        $filesystem = $this->fsSetup( $app );
+        $dirToRemove = $request->request->get( "tinypngDeleteDirectory" );
+
+
+        try {
+            $filesystem->deleteDir( $dirToRemove );
+            $app['session']
+                ->getFlashbag()
+                ->set( 'success', "{$dirToRemove} Successfully Deleted/Removed!" );
+
+        } catch ( IOException $e ) {
+            $message = "Cannot Delete Directory. Please Check Your Filesystem Permissions.";
+
+            $app['logger.system']->error( $message, [ 'event' => 'exception' ] );
+
+            $app['session']
+                ->getFlashBag()
+                ->set( 'error', 'TinyPNG:: ' . $message );
+
+            return null;
+        }
+
+        $urlGenerator = $app['url_generator'];
+
+        return new RedirectResponse( $urlGenerator->generate( 'tinypng-all-images', [ 'directory' => $directory ] ) );
+
+    }
 
 
     /**
