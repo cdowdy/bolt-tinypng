@@ -1,5 +1,14 @@
 <div>
     <h2>Create a New Directory Here:</h2>
+    {% if directory == 'index' %}
+        {% set currentDir = 'files' %}
+    {% else %}
+        {% set currentDir = directory %}
+    {% endif %}
+
+    <p>
+        This will create a new 'sub' directory in <b>{{ currentDir }}</b>
+    </p>
     <form class="form-inline"
           name="tinypng_new_dir"
           method="POST"
