@@ -31,20 +31,14 @@ class FilePathHelper
      * Get Bolt's Files path
      * @return mixed
      *
-     * The version is "reversed" from what you would logically use..
-     * instead of 'this version is greater than or equal too 3.3.0'
-     * we have to think ok the current bolt version is less than the one we are comparing
-     *
-     * example: bolt version 3.2.14 is less than 3.3.0 so
-     *  Version::compare( '3.3.0', '>=') would need to use resources not path_resolver
+     * Use PHP's version_compare instead of bolts Version::compare since it's "broken"
      */
     public function boltFilesPath()
     {
-        if (Version::compare( '3.3.0', '>=')) {
-            return $this->app['resources']->getPath( 'filespath' );
-        } else {
+        if ( version_compare( Version::VERSION , '3.3.0', '>=' ) ) {
             return $this->app['path_resolver']->resolve('files');
-
+        } else {
+            return $this->app['resources']->getPath( 'filespath' );
         }
     }
 
@@ -54,7 +48,7 @@ class FilePathHelper
      */
     public function boltExtensionsPath()
     {
-        if (Version::compare('3.3.0', '>=')) {
+        if ( version_compare( Version::VERSION , '3.3.0', '>=' ) ) {
             return $this->app['path_resolver']->resolve('extensions');
         } else {
             return $this->app['resources']->getPath('extensions');
