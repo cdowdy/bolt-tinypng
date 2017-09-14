@@ -187,7 +187,7 @@ class TinyPNGBackendController implements ControllerProviderInterface {
 			'directory'          => $directory,
 		];
 
-		return $app['twig']->render( 'tinypng.imageoptimization.html.twig', $context );
+		return $app['twig']->render( '@tinypng/tinypng.imageoptimization.html.twig', $context );
 	}
 
 
@@ -403,14 +403,6 @@ class TinyPNGBackendController implements ControllerProviderInterface {
 	    // for bolt's new filesystem since $app['resources'] and getPath() are deprecated in 3.3+
         // and will be removed in 4.0
 
-//        if (Version::compare( '3.3.0', '>=')) {
-//            $boltFilesPath =  $app['path_resolver']->resolve('files');
-//        } else {
-//            $boltFilesPath = $app['resources']->getPath( 'filespath' );
-//
-//        }
-
-//        $boltFilesPath = $this->boltFilesPath($app);
         $boltFilesPath = (new FilePathHelper( $app ) )->boltFilesPath() ;
 
 		$adapter       = new Local( $boltFilesPath );

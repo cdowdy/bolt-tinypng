@@ -73,7 +73,7 @@
                 <tr>
                     <td id="tnypng-upload-form-container">
 
-                        {% include "forms/_tnypng_upload.html.twig" %}
+                        {% include "@tinypng/forms/_tnypng_upload.html.twig" %}
 
                     </td>
                     <td>
@@ -138,7 +138,7 @@
 
                         {% if tinyPNG_files %}
 
-                            {% import "macros/_tnypng-list-files.html.twig" as list %}
+                            {% import "@tinypng/macros/_tnypng-list-files.html.twig" as list %}
                             {{ list.tnypngFileList(tinyPNG_files, directory) }}
 
                         {% else %}
@@ -189,7 +189,7 @@
                         {% endfor %}
                         </tbody>
                     </table>
-                    {% include "forms/_tnypng_create_newDir.html.twig" with { 'directory' : directory } %}
+                    {% include "@tinypng/forms/_tnypng_create_newDir.html.twig" with { 'directory' : directory } %}
                 </div>
             </div>
 
@@ -200,7 +200,7 @@
             {#{{ message }}#}
         {#</div>#}
 
-        {% include '_tinypng-working-modal.twig' %}
+        {% include '@tinypng/_tinypng-working-modal.twig' %}
 
 
     </div>

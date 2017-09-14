@@ -54,19 +54,19 @@
         <td>
             <div class="btn-group">
                 {# regular optmize button #}
-                {% include "buttons/_tnypng_optimize-button.html.twig" %}
+                {% include "@tinypng/buttons/_tnypng_optimize-button.html.twig" %}
                 {# dropdown button with the "preserve" options #}
-                {% include "buttons/_tnypng_preserve-dropdown.html.twig" %}
+                {% include "@tinypng/buttons/_tnypng_preserve-dropdown.html.twig" %}
             </div>
             {# rename and optimize button #}
-            {% include "buttons/_tnypng-rename.html.twig" %}
+            {% include "@tinypng/buttons/_tnypng-rename.html.twig" %}
 
             {# delete button include #}
-            {% include "buttons/_tnypng_delete.html.twig" %}
+            {% include "@tinypng/buttons/_tnypng_delete.html.twig" %}
 
             {# modal for the optmize and rename -- should refactor this so only one is on the page#}
 
-            {% include "modals/_tnypng_renamemodal.html.twig" with {'directory' : directory} %}
+            {% include "@tinypng/modals/_tnypng_renamemodal.html.twig" with {'directory' : directory} %}
 
         </td>
     </tr>
