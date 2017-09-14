@@ -67,7 +67,8 @@ class TinyPNGExtension extends SimpleExtension {
 	protected function registerBackendControllers() {
 		$config = $this->getConfig();
 
-        if ( Version::compare('3.3.0', '>=')) {
+        if ( version_compare( Version::VERSION , '3.3.0', '>=' ) ) {
+            echo 'my version is greater than or equal too 3.3.0 ';
             return [
                 '/extensions/tinypng' => new TinyPNGBackendController($config),
             ];
