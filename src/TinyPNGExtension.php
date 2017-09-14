@@ -83,6 +83,6 @@ class TinyPNGExtension extends SimpleExtension {
 	 * {@inheritdoc}
 	 */
 	protected function registerTwigPaths() {
-		return [ 'templates' ];
+		return [ 'templates'=> [ 'position' => 'prepend', 'namespace'=>'tinypng'] ];
 	}
 }
