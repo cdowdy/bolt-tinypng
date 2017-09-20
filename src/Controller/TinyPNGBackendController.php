@@ -3,11 +3,10 @@
 namespace Bolt\Extension\cdowdy\tinypng\Controller;
 
 
-use Bolt\Extension\cdowdy\tinypng\Handler\TinyPNGUpload;
 use Bolt\Extension\cdowdy\tinypng\Helpers\ConfigHelper;
 use Bolt\Extension\cdowdy\tinypng\Helpers\FilePathHelper;
 use Bolt\Filesystem\Exception\IOException;
-use Bolt\Version as Version;
+
 
 use League\Flysystem\Adapter\Local;
 use League\Flysystem\Filesystem;
@@ -20,7 +19,6 @@ use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
 use Symfony\Component\Validator\Constraints as Assert;
-use Tinify;
 
 
 /**
@@ -140,13 +138,11 @@ class TinyPNGBackendController implements ControllerProviderInterface {
 
 		// recursively get all the files under '/files/'
 		// don't worry about folder structure just dump em all out :)
-//		$fileList = $filesystem->listContents( null, true );
+
 		if ( $directory == 'index' ) {
 			$fileList = $filesystem->listContents( null, false );
-//			$paths = $filesystem->listContents( null );
 		} else {
 			$fileList = $filesystem->listContents( $directory, false );
-//			$paths = $filesystem->listContents( $directory, true );
 		}
 
 		$paths = $filesystem->listContents( null );
@@ -167,20 +163,17 @@ class TinyPNGBackendController implements ControllerProviderInterface {
 			->setUploadMethod( $uploadMethod );
 
 
-		$tnyPngUpload = new TinyPNGUpload( $app, $this->config );
+		$methods = $app['tinypng.upload']->tinyPNGMethod( $configHelper->getUploadMethod() );
 
-
-		$methods = $tnyPngUpload->tinyPNGMethod( $configHelper->getUploadMethod() );
-
-		$checkW = $tnyPngUpload->checkForWidthHeights( 'width' );
-		$checkH = $tnyPngUpload->checkForWidthHeights( 'height' );
+		$checkW = $app['tinypng.upload']->checkForWidthHeights( 'width' );
+		$checkH = $app['tinypng.upload']->checkForWidthHeights( 'height' );
 
 		// context to render in our twig template
 		$context = [
 			'noKey'              => empty( $configHelper->getTnypngAPIKey() ),
 			'tinyPNG_files'      => $this->getAllFiles( $app, $fileList ),
 			'tnypng_directories' => $dirs,
-			'compressionCount'   => $this->getCompressionCount( $app ),
+			'compressionCount'   => $app['tinypng.optimize']->getCompressionCount(),
 			'uploadMethod'       => $methods,
 			'maxWidth'           => $checkW,
 			'maxHeight'          => $checkH,
@@ -291,14 +284,12 @@ class TinyPNGBackendController implements ControllerProviderInterface {
 	 */
 	public function optimizeImage( Application $app, Request $request )
 	{
-		$config = $this->config;
 
 		// request variables to get from the posted data
 		$image           = $request->get( 'image' );
 		$preserveOptions = $request->get( 'preserve' );
 
 		// get bolts filepath - can be changed by the user
-//		$filesPath = $app['resources']->getpath( 'filespath' );
         $filesPath = (new FilePathHelper( $app ) )->boltFilesPath() ;
 
 		$filesystem = $this->fsSetup( $app );
@@ -306,18 +297,15 @@ class TinyPNGBackendController implements ControllerProviderInterface {
 		// append filespath to the front of the image we are using
 		$imagePath = $filesPath . '/' . $image;
 
-		$tinypngkey = $config['tinypng_apikey'];
-
-
-		$valid = $this->tinypngValidate( $app, $tinypngkey );
+		$valid = $app['tinypng.optimize']->tinypngValidate();
 
 		$optimized = [];
 		if ( $valid ) {
-			$this->tryOptimization( $app, $imagePath, '', $preserveOptions );
+            $app['tinypng.optimize']->tryOptimization( $imagePath, '', $preserveOptions );
 			$optimized[] = [
 //				'optimizedImage' =>,
 //				'filelist' => $this->getAllFiles($filesystem)
-				'compressionCount' => $this->getCompressionCount( $app ),
+				'compressionCount' => $app['tinypng.optimize']->getCompressionCount(),
 				'optimizedSize'    => self::bytesToHuman( $filesystem->getSize( $image ) ),
 			];
 		}
@@ -336,7 +324,6 @@ class TinyPNGBackendController implements ControllerProviderInterface {
 	 */
 	public function renameOptimize( Application $app, Request $request, $directory )
 	{
-		$config = $this->config;
 
 		// request variables to get from the posted data
 		$image           = $request->get( 'image' );
@@ -345,7 +332,6 @@ class TinyPNGBackendController implements ControllerProviderInterface {
 
 
 		// get bolts filepath - can be changed by the user
-//		$filesPath = $app['resources']->getpath( 'filespath' );
         $filesPath = (new FilePathHelper( $app ) )->boltFilesPath() ;
 
 		$filesystem = $this->fsSetup( $app );
@@ -360,18 +346,15 @@ class TinyPNGBackendController implements ControllerProviderInterface {
 		}
 
 
-		$tinypngkey = $config['tinypng_apikey'];
-
-
-		$valid = $this->tinypngValidate( $app, $tinypngkey );
+        $valid = $app['tinypng.optimize']->tinypngValidate();
 
 
 		$optimized = [];
 
 		if ( $valid ) {
-			$this->tryOptimization( $app, $imagePath, $newImagePath, $preserveOptions );
+            $app['tinypng.optimize']->tryOptimization( $imagePath, $newImagePath, $preserveOptions );
 			$optimized[] = [
-				'compressionCount' => $this->getCompressionCount( $app ),
+				'compressionCount' => $app['tinypng.optimize']->getCompressionCount(),
 				'optimizedSize'    => self::bytesToHuman( $filesystem->getSize( $image ) ),
 			];
 		}
@@ -413,178 +396,6 @@ class TinyPNGBackendController implements ControllerProviderInterface {
 
 
 	/**
-	 * @param Application $app
-	 *
-	 * @return null|string
-	 */
-	protected function getCompressionCount( Application $app )
-	{
-		$config     = $this->config;
-		$tinypngkey = $config['tinypng_apikey'];
-
-		$validateKey = $this->tinypngValidate( $app, $tinypngkey );
-
-		if ( $validateKey ) {
-			$comressionsThisMonth = Tinify\getCompressionCount();
-		} else {
-			$comressionsThisMonth = 'your api key isn\'t valid';
-
-		}
-
-		return $comressionsThisMonth;
-	}
-
-
-	/**
-	 * @param Application $app
-	 * @param             $apiKey
-	 *
-	 * @return bool
-	 */
-	protected function tinypngValidate( Application $app, $apiKey )
-	{
-
-		try {
-			Tinify\setKey( $apiKey );
-			Tinify\validate();
-			// Use the Tinify API client.
-		} catch ( Tinify\AccountException $e ) {
-
-			$message = "TinyPNG Account Exception: " . $e->getMessage();
-			$app['logger.system']->error( $message, [ 'event' => 'authentication' ] );
-
-			$flash = "There was a problem with your API key or with your API account. Your request could not be authorized. If your compression limit is reached, you can wait until the next calendar month or upgrade your subscription. After verifying your API key and your account status, you can retry the request.";
-			$app['logger.flash']->error( 'TinyPNG:: ' . $flash . ' <br/> ' . $e->getMessage() );
-			// Verify your API key and account limit.
-		} catch ( \Exception $e ) {
-			$app['logger.system']->error( $e->getMessage(), [ 'event' => 'exception' ] );
-		}
-
-		return true;
-	}
-
-	/**
-	 * @param Application $app
-	 * @param             $image
-	 * @param             $newName
-	 * @param             $dataToPreserve
-	 *
-	 * @return array
-	 */
-	protected function tryOptimization( Application $app, $image, $newName, $dataToPreserve )
-	{
-		$optimized = [];
-		$imagename = $this->doRename( $image, $newName );
-
-		try {
-			$source = \Tinify\fromFile( $image );
-
-			if ( $dataToPreserve !== 'none' ) {
-
-				if ( $dataToPreserve === 'location' ) {
-					$preserved = $source->preserve( "location" );
-
-				} elseif ( $dataToPreserve === 'creation' ) {
-					$preserved = $source->preserve( "creation" );
-
-				} elseif ( $dataToPreserve === 'copyright' ) {
-					$preserved = $source->preserve( "creation" );
-				} else {
-					$preserved = $source->preserve( "location", "creation", "copyright" );
-				}
-
-				$optimized[] = $preserved->toFile( $imagename );
-			} else {
-				$optimized[] = $source->toFile( $imagename );
-			}
-
-			// Use the Tinify API client.
-		} catch ( Tinify\ClientException $e ) {
-
-			$message = "TinyPNG Client Exception: " . $e->getMessage();
-
-			$app['logger.system']->error( $message, [ 'event' => 'exception' ] );
-
-			$app['logger.flash']->error( 'The request could not be completed because of a problem with the submitted data: ' . $e->getMessage() );
-
-			// Check your source image and request options.
-		} catch ( Tinify\ServerException $e ) {
-			$message = "TinyPNG Server Exception: " . $e->getMessage();
-			$app['logger.system']->error( $message, [ 'event' => 'exception' ] );
-
-			$flash = "The request could not be completed because of a temporary problem with the Tinify API. It is safe to retry the request after a few minutes. If you see this error repeatedly for a longer period of time, please contact support@tinify.com";
-
-			$app['logger.flash']->error( 'TinyPNG Server Exception: ' . $flash );
-
-			// Temporary issue with the Tinify API.
-		} catch ( Tinify\ConnectionException $e ) {
-
-			$message = "TinyPNG Connection Exception: " . $e->getMessage();
-			$app['logger.system']->error( $message, [ 'event' => 'exception' ] );
-
-			$flash = "The request could not be sent because there was an issue connecting to the Tinify API. You should verify your network connection. It is safe to retry the request";
-			$app['logger.flash']->error( 'TinyPNG Connection Exception: ' . $flash );
-			// A network connection error occurred.
-		} catch ( \Exception $e ) {
-			$app['logger.system']->error( $e->getMessage(), [ 'event' => 'exception' ] );
-		}
-
-		return $optimized;
-	}
-
-
-	/**
-	 * @param $image
-	 * @param $newName
-	 *
-	 * @return string
-	 */
-	protected function doRename( $image, $newName )
-	{
-		$getExt = pathinfo( $image );
-
-
-		if ( empty( $newName ) ) {
-			return $image;
-		} else {
-			return $newName . '.' . $getExt['extension'];
-		}
-
-	}
-
-
-	/**
-	 * @param $data
-	 *
-	 * @return string
-	 * this doesn't work because I mucked up the preserved for all
-	 */
-	protected function tinyPngPreserve( $data )
-	{
-		$preserved = '';
-
-		if ( $data === 'all' ) {
-
-			$preserved = '"location", "creation", "copyright"';
-		}
-
-		if ( $data === 'location' ) {
-			$preserved = "location";
-		}
-
-		if ( $data === "creation" ) {
-			$preserved = "creation";
-		}
-
-		if ( $data === "copyright" ) {
-			$preserved = "copyright";
-		}
-
-		return $preserved;
-	}
-
-
-	/**
 	 * @return array
 	 */
 	protected function checkAccpetedTypes()
@@ -620,8 +431,6 @@ class TinyPNGBackendController implements ControllerProviderInterface {
      */
 	public function uploadImage( Application $app, Request $request, $directory )
 	{
-		$config = $this->config;
-
 
 		if ( $directory == 'index' ) {
 
@@ -630,22 +439,17 @@ class TinyPNGBackendController implements ControllerProviderInterface {
 
 			$uploadDir = $directory . '/';
 		}
-//		$boltFilesPath = $app['resources']->getPath( 'filespath' );
-//        $boltFilesPath = $this->boltFilesPath($app);
+
         $boltFilesPath = (new FilePathHelper( $app ) )->boltFilesPath() ;
 		$filesystem = $this->fsSetup( $app );
 
-		$tinypngkey = $config['tinypng_apikey'];
-
-		$valid = $this->tinypngValidate( $app, $tinypngkey );
-
-		$tnypngUpload = new TinyPNGUpload( $app, $this->config );
+		$valid = $app['tinypng.optimize']->tinypngValidate();
 
 		$configMethod = isset( $this->config['tinypng_upload']['method'] )
 			? $this->config['tinypng_upload']['method']
 			: '';
 
-		$resizeMethod = $tnypngUpload->tinyPNGMethod( $configMethod );
+		$resizeMethod = $app['tinypng.upload']->tinyPNGMethod( $configMethod );
 
 		$success = [];
 
@@ -711,7 +515,7 @@ class TinyPNGBackendController implements ControllerProviderInterface {
 
 
 					if ( $valid ) {
-						$tnypngUpload->tinyPNGDoResize( $newImagePath, $resizeMethod );
+                        $app['tinypng.upload']->tinyPNGDoResize( $newImagePath, $resizeMethod );
 					}
 
 				} catch ( IOException $e ) {
@@ -729,7 +533,7 @@ class TinyPNGBackendController implements ControllerProviderInterface {
 				$success[] = [
 					'name'             => $newName,
 					'optimizedSize'    => self::bytesToHuman( $filesystem->getSize( $newName ) ),
-					'compressionCount' => $this->getCompressionCount( $app )
+					'compressionCount' => $app['tinypng.optimize']->getCompressionCount()
 				];
 			}
 
