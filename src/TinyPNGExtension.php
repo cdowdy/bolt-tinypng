@@ -11,6 +11,7 @@ if ( is_file( $autoload ) ) {
 use Bolt\Asset\File\JavaScript;
 use Bolt\Asset\File\Stylesheet;
 use Bolt\Controller\Zone;
+use Bolt\Extension\cdowdy\tinypng\Providers\TinyPNGProvider;
 use Bolt\Version as Version;
 use Bolt\Extension\cdowdy\tinypng\Controller\TinyPNGBackendController;
 use Bolt\Extension\SimpleExtension;
@@ -85,4 +86,15 @@ class TinyPNGExtension extends SimpleExtension {
 	protected function registerTwigPaths() {
 		return [ 'templates'=> [ 'position' => 'prepend', 'namespace'=>'tinypng'] ];
 	}
+
+    /**
+     * @return array
+     */
+    public function getServiceProviders()
+    {
+        return [
+            $this,
+            new TinyPNGProvider( $this->getConfig() ),
+        ];
+    }
 }
