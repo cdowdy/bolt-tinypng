@@ -170,7 +170,7 @@
                         {% for key, value in tnypng_directories %}
                             <tr>
                                 <td>
-                                    <a href="{{ path("tinypng-all-images") }}/{{ value.directory.path }}">
+                                    <a href="{{ path("tinypng-all-images", { 'directory': value.directory.path }) }}">
                                         {{ value.directory.path  }}
                                     </a>
                                 </td>
@@ -178,7 +178,7 @@
                                 {% if value.subdirectory %}
                                     {% for key, value in value.subdirectory %}
                                        <p>
-                                           <a href="{{ path("tinypng-all-images") }}/{{ value }}">
+                                           <a href="{{ path("tinypng-all-images", { 'directory': value }) }}">
                                                {{ value }}
                                            </a>
                                        </p>
