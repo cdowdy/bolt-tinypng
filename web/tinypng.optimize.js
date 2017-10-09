@@ -24,13 +24,13 @@ $(document).ready(function () {
 
             if (target.classList.contains('tinyPNG-optimize')) {
                 event.preventDefault();
-                optimize(img, preserveData, ajaxPath, fileSizeUpdate);
+                optimize(img, preserveData, ajaxPath, fileSizeUpdate );
 
             }
 
             if (target.classList.contains('tnypng-copy')) {
                 event.preventDefault();
-                optimize(img, preserveData, ajaxPath, fileSizeUpdate);
+                optimize(img, preserveData, ajaxPath, fileSizeUpdate );
             }
 
             if (target.classList.contains('tnypng-create')) {
@@ -40,13 +40,13 @@ $(document).ready(function () {
 
             if (target.classList.contains('tnypng-location')) {
                 event.preventDefault();
-                optimize(img, preserveData, ajaxPath, fileSizeUpdate);
+                optimize(img, preserveData, ajaxPath, fileSizeUpdate );
             }
 
 
             if (target.classList.contains('tnypng-allthree')) {
                 event.preventDefault();
-                optimize(img, preserveData, ajaxPath, fileSizeUpdate);
+                optimize(img, preserveData, ajaxPath, fileSizeUpdate );
 
             }
 
