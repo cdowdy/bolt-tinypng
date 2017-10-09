@@ -7,6 +7,7 @@ $(document).ready(function () {
      * @type {*}
      */
     var tinyPNGOptimize = $(".tinyPNG-buttons");
+    var tinyPNGOptimizeQueue = 0;
 
     /**
      *
@@ -23,29 +24,29 @@ $(document).ready(function () {
 
             if (target.classList.contains('tinyPNG-optimize')) {
                 event.preventDefault();
-                optimize(img, preserveData, ajaxPath, fileSizeUpdate );
+                optimize(img, preserveData, ajaxPath, fileSizeUpdate);
 
             }
 
             if (target.classList.contains('tnypng-copy')) {
                 event.preventDefault();
-                optimize(img, preserveData, ajaxPath, fileSizeUpdate );
+                optimize(img, preserveData, ajaxPath, fileSizeUpdate);
             }
 
             if (target.classList.contains('tnypng-create')) {
                 event.preventDefault();
-                optimize(img, preserveData, ajaxPath, fileSizeUpdate );
+                optimize(img, preserveData, ajaxPath, fileSizeUpdate);
             }
 
             if (target.classList.contains('tnypng-location')) {
                 event.preventDefault();
-                optimize(img, preserveData, ajaxPath, fileSizeUpdate );
+                optimize(img, preserveData, ajaxPath, fileSizeUpdate);
             }
 
 
             if (target.classList.contains('tnypng-allthree')) {
                 event.preventDefault();
-                optimize(img, preserveData, ajaxPath, fileSizeUpdate );
+                optimize(img, preserveData, ajaxPath, fileSizeUpdate);
 
             }
 
@@ -72,7 +73,7 @@ $(document).ready(function () {
                     // form.find(".form-input-container").attr("hidden", true);
                     // form.find(".tnypng-spinner-container").attr("hidden", false);
                     // $(".renameModal").find('.imageToOptimize').text(img + ' is being optimized...');
-                    optimizeRename(img, theName, preserveRadio, ajaxPath, fileSizeUpdate );
+                    optimizeRename(img, theName, preserveRadio, ajaxPath, fileSizeUpdate);
                     removeRenameSpiner(form, ".form-input-container", ".tnypng-spinner-container", img);
                 }
             }
@@ -89,6 +90,34 @@ $(document).ready(function () {
         }
     });
 
+    document.addEventListener('click', function (event) {
+        var target = event.target;
+        if (target.classList.contains('js-tinypng-optimize-all')) {
+            event.preventDefault();
+            optimizeAll();
+        }
+    });
+
+
+    /**
+     * Batch optimize all images in current directory
+     */
+    var optimizeAll = function () {
+        for (var key in tinyPNGOptimize) {
+            if (tinyPNGOptimize.hasOwnProperty(key)) {
+                var element = tinyPNGOptimize[key];
+                if (element instanceof Element) {
+                    var target = element.querySelector('.tinyPNG-optimize');
+                    var img = target.dataset.imagepath;
+                    var ajaxPath = target.dataset.tinypngpath;
+                    var preserveData = target.dataset.optiparam;
+                    var fileSizeUpdate = $("#" + element.id + " .imgFileSize");
+                    optimize(img, preserveData, ajaxPath, fileSizeUpdate);
+                };
+            }
+        }
+    };
+
 
     /**
      * optimize the image with tinypng api
@@ -99,6 +128,7 @@ $(document).ready(function () {
      */
     var optimize = function (img, preserve, path, fileSizeUpdate ) {
         var workingModal = $("#working-modal");
+        tinyPNGOptimizeQueue++;
         $.ajax({
             type: "POST",
             url: path,
@@ -109,20 +139,24 @@ $(document).ready(function () {
             dataType: "json",
 
             beforeSend: function () {
-                workingModal.modal("toggle");
+                if (tinyPNGOptimizeQueue === 1) {
+                    workingModal.modal("show");
+                }
                 workingModal.find('.imageToOptimize').text(img + ' is being optimized...');
                 disableButtons();
-
             },
 
             success: function (data) {
-                workingModal.modal("hide");
+                tinyPNGOptimizeQueue--;
+                if (tinyPNGOptimizeQueue === 0) {
+                    workingModal.modal("hide");
+                }
                 enableButtons();
                 postOptimizeUpdate(data, fileSizeUpdate);
-
             },
 
             error: function (xhr, desc, err) {
+                tinyPNGOptimizeQueue--;
                 enableButtons();
                 console.log(xhr);
                 console.log("Details: " + desc + "\nError:" + err);
