@@ -21,16 +21,14 @@ $(document).ready(function () {
             var preserveData = target.getAttribute('data-optiparam');
             var fileSizeUpdate = $("#" + this.id + " .imgFileSize");
 
-
             if (target.classList.contains('tinyPNG-optimize')) {
                 event.preventDefault();
-                optimize(img, preserveData, ajaxPath, fileSizeUpdate );
-
+                optimize(img, preserveData, ajaxPath, fileSizeUpdate);
             }
 
             if (target.classList.contains('tnypng-copy')) {
                 event.preventDefault();
-                optimize(img, preserveData, ajaxPath, fileSizeUpdate );
+                optimize(img, preserveData, ajaxPath, fileSizeUpdate);
             }
 
             if (target.classList.contains('tnypng-create')) {
@@ -40,14 +38,12 @@ $(document).ready(function () {
 
             if (target.classList.contains('tnypng-location')) {
                 event.preventDefault();
-                optimize(img, preserveData, ajaxPath, fileSizeUpdate );
+                optimize(img, preserveData, ajaxPath, fileSizeUpdate);
             }
-
 
             if (target.classList.contains('tnypng-allthree')) {
                 event.preventDefault();
-                optimize(img, preserveData, ajaxPath, fileSizeUpdate );
-
+                optimize(img, preserveData, ajaxPath, fileSizeUpdate);
             }
 
             if (target.classList.contains('tinypng-delete')) {
@@ -55,7 +51,6 @@ $(document).ready(function () {
                 var containerID = $('#' + this.id);
                 // containerID.addClass("removed-item");
                 deleteImage(img, containerID, ajaxPath);
-
             }
 
             // This is the modal window to optimize and rename an image
@@ -126,7 +121,7 @@ $(document).ready(function () {
      * @param path - the ajax route
      * @param fileSizeUpdate
      */
-    var optimize = function (img, preserve, path, fileSizeUpdate ) {
+    var optimize = function (img, preserve, path, fileSizeUpdate) {
         var workingModal = $("#working-modal");
         tinyPNGOptimizeQueue++;
         $.ajax({
