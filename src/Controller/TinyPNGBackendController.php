@@ -77,6 +77,11 @@ class TinyPNGBackendController implements ControllerProviderInterface {
 		    ->value( "directory", "index" )
 		    ->bind( 'tinypng-rename' );
 
+        $ctr->post( '/batch/optimize/{directory}', [ $this, 'batchOptimize' ] )
+            ->assert( "directory", '.+' )
+            ->value( "directory", "index" )
+            ->bind( 'tinypng-batch-optimize' );
+
 		$ctr->post( '/upload/{directory}', [ $this, 'uploadImage' ] )
 		    ->assert( "directory", '.+' )
 		    ->value( "directory", "index" )
@@ -118,6 +123,17 @@ class TinyPNGBackendController implements ControllerProviderInterface {
 
 			return new RedirectResponse( $generator->generate( 'dashboard' ), Response::HTTP_SEE_OTHER );
 		}
+
+        // axios sends data differently than Jquery Ajax did
+        // Jquery defaults to x-www-form-urlencoded while Axios / fetch send it as actual JSON
+        // SO we'll need to decode the request to get the data and use Axios' 'data' key as our key to then
+        // grab our 'image' with the associated file name
+        // see https://silex.symfony.com/doc/2.0/cookbook/json_request_body.html#parsing-the-request-body
+        if ( 0 === strpos( $request->headers->get( 'Content-Type' ), 'application/json' ) ) {
+            $requestData = json_decode( $request->getContent( 'data' ), true );
+
+            $request->request->replace( is_array( $requestData ) ? $requestData : [] );
+        }
 
 		return null;
 	}
@@ -171,8 +187,8 @@ class TinyPNGBackendController implements ControllerProviderInterface {
 		// context to render in our twig template
 		$context = [
 			'noKey'              => empty( $configHelper->getTnypngAPIKey() ),
-			'tinyPNG_files'      => $this->getAllFiles( $app, $fileList ),
-			'tnypng_directories' => $dirs,
+			'tinyPNG_files'      => json_encode( $this->getAllFiles( $app, $fileList ) ),
+			'tnypng_directories' => json_encode( $this->getAllDirectories( $app, $paths ) ),
 			'compressionCount'   => $app['tinypng.optimize']->getCompressionCount(),
 			'uploadMethod'       => $methods,
 			'maxWidth'           => $checkW,
@@ -189,44 +205,56 @@ class TinyPNGBackendController implements ControllerProviderInterface {
      * @param $fileList
      * @return array
      */
-	protected function getAllDirectories( $app, $fileList )
-	{
-		$filesystem = $this->fsSetup( $app );
+    protected function getAllDirectories( $app, $fileList )
+    {
+        $filesystem   = $this->fsSetup($app);
+        $urlGenerator = $app[ 'url_generator' ];
 
-		$files = [];
+        $files = [];
 
-		foreach ( $fileList as $object ) {
-			if ( $object['type'] == 'dir'
-			     && ! preg_match_all( '/.cache/i', $object['dirname'] )
-			     && ! preg_match_all( '/.cache/i', $object['basename'] )
-			) {
+        foreach ( $fileList as $object ) {
+            if ( $object[ 'type' ] == 'dir'
+                && !preg_match_all('/.cache/i', $object[ 'dirname' ])
+                && !preg_match_all('/.cache/i', $object[ 'basename' ])
+            ) {
 
-				$listPaths = $filesystem->listContents( $object['path'], true );
+                $listPaths = $filesystem->listContents($object[ 'path' ], true);
 
-				$files[] = [
-					'directory'    => $object,
-					'subdirectory' => $this->listFileSystemPaths( $listPaths )
-				];
-			}
+                $files[] = [
+                    'path'         => $object[ 'path' ],
+                    'route'        => $urlGenerator->generate('tinypng-all-images', [ 'directory' => $object[ 'path' ] ]),
+                    'subdirectory' => array_filter($this->listFileSystemPaths($app, $listPaths))
+                ];
+            }
 
-		}
+        }
 
-		return $files;
+        return $files;
 
-	}
+    }
 
-	protected function listFileSystemPaths( $paths )
+    /**
+     * @param $app
+     * @param $paths
+     * @return array
+     */
+	protected function listFileSystemPaths( $app, $paths )
 	{
 		$pathsList = [];
 
-		foreach ( $paths as $object ) {
-			if ( $object['type'] == 'dir'
-			     && ! preg_match_all( '/.cache/i', $object['dirname'] )
-			     && ! preg_match_all( '/.cache/i', $object['basename'] )
-			) {
-				$pathsList[] = $object['path'];
-			}
-		}
+        $urlGenerator = $app['url_generator'];
+
+        foreach ( $paths as $object ) {
+            if ( $object[ 'type' ] == 'dir'
+                && !preg_match_all( '/.cache/i', $object[ 'dirname' ] )
+                && !preg_match_all( '/.cache/i', $object[ 'basename' ] )
+            ) {
+                $pathsList[] = [
+                    'path'  => $object[ 'path' ],
+                    'route' => $urlGenerator->generate('tinypng-all-images', [ 'directory' => $object[ 'path' ] ])
+                ];
+            }
+        }
 
 		return $pathsList;
 
@@ -250,7 +278,7 @@ class TinyPNGBackendController implements ControllerProviderInterface {
 
 			// we only want "files" here so anything else in the files directory can be "discarded"
 			// we'll also skip over if there is a ".cache" directory like from my betterthumbs extension
-			// finally we'll make sure we are only deailing with jpg/png files
+			// finally we'll make sure we are only dealing with jpg/png files
 			if ( $object['type'] == 'file'
 			     && ! preg_match_all( '/^.cache\//i', $object['dirname'] )
 			     && in_array( strtolower( $filesystem->getMimetype( $object['path'] ) ), $expectedMimes )
@@ -286,13 +314,12 @@ class TinyPNGBackendController implements ControllerProviderInterface {
 	{
 
 		// request variables to get from the posted data
-		$image           = $request->get( 'image' );
-		$preserveOptions = $request->get( 'preserve' );
+		$image           = $request->request->get( 'image' );
+		$preserveOptions = $request->request->get( 'preserve' );
 
 		// get bolts filepath - can be changed by the user
         $filesPath = (new FilePathHelper( $app ) )->boltFilesPath() ;
 
-		$filesystem = $this->fsSetup( $app );
 
 		// append filespath to the front of the image we are using
 		$imagePath = $filesPath . '/' . $image;
@@ -300,67 +327,112 @@ class TinyPNGBackendController implements ControllerProviderInterface {
 		$valid = $app['tinypng.optimize']->tinypngValidate();
 
 		$optimized = [];
-		if ( $valid ) {
-            $app['tinypng.optimize']->tryOptimization( $imagePath, '', $preserveOptions );
-			$optimized[] = [
-//				'optimizedImage' =>,
-//				'filelist' => $this->getAllFiles($filesystem)
-				'compressionCount' => $app['tinypng.optimize']->getCompressionCount(),
-				'optimizedSize'    => self::bytesToHuman( $filesystem->getSize( $image ) ),
-			];
-		}
+        if ( $valid ) {
+            $app[ 'tinypng.optimize' ]->tryOptimization($imagePath, '', $preserveOptions);
+
+            $optimized[] = $this->normalizedResponse($app, $image, $imagePath );
+        }
 
 
 		return new JsonResponse( $optimized );
 	}
 
-	/**
-	 * @param Application $app
-	 * @param Request     $request
-	 *
-	 * @param             $directory
-	 *
-	 * @return JsonResponse
-	 */
-	public function renameOptimize( Application $app, Request $request, $directory )
-	{
 
-		// request variables to get from the posted data
-		$image           = $request->get( 'image' );
-		$newImageName    = $request->get( 'newName' );
-		$preserveOptions = $request->get( 'preserve' );
+    /**
+     * @param Application $app
+     * @param Request     $request
+     * @param             $directory
+     * @return JsonResponse
+     *
+     * batch optimize the images and return the file list and the compression count
+     */
+    public function batchOptimize( Application $app, Request $request, $directory )
+    {
 
+        $images          = $request->request->get('images');
+        $preserveOptions = $request->request->get('preserve');
 
-		// get bolts filepath - can be changed by the user
-        $filesPath = (new FilePathHelper( $app ) )->boltFilesPath() ;
+        $filesPath = ( new FilePathHelper($app) )->boltFilesPath();
+        $valid     = $app[ 'tinypng.optimize' ]->tinypngValidate();
 
-		$filesystem = $this->fsSetup( $app );
-
-		// append filespath to the front of the image we are using
-		$imagePath = $filesPath . '/' . $image;
-
-		if ( $directory == 'index' ) {
-			$newImagePath = $filesPath . '/' . $newImageName;
-		} else {
-			$newImagePath = $filesPath . '/' . $directory . '/' . $newImageName;
-		}
+        $filesystem = $this->fsSetup($app);
 
 
-        $valid = $app['tinypng.optimize']->tinypngValidate();
+        if ( $directory == 'index' ) {
+            $fileList = $filesystem->listContents(null, false);
+        } else {
+            $fileList = $filesystem->listContents($directory, false);
+        }
 
 
-		$optimized = [];
+        foreach ( $images as $image ) {
+            if ( $valid ) {
+                // append filespath to the front of the image we are using
+                $imagePath = $filesPath . '/' . $image;
+                $app[ 'tinypng.optimize' ]->tryOptimization($imagePath, '', $preserveOptions);
 
-		if ( $valid ) {
-            $app['tinypng.optimize']->tryOptimization( $imagePath, $newImagePath, $preserveOptions );
-			$optimized[] = [
-				'compressionCount' => $app['tinypng.optimize']->getCompressionCount(),
-				'optimizedSize'    => self::bytesToHuman( $filesystem->getSize( $image ) ),
-			];
-		}
+            }
+        }
 
-		return new JsonResponse( $optimized );
-	}
+        $optimized = [
+            'fileList'         => $this->getAllFiles($app, $fileList),
+            'compressionCount' => $app[ 'tinypng.optimize' ]->getCompressionCount(),
+        ];
+
+        return new JsonResponse($optimized);
+    }
+
+    /**
+     * @param Application $app
+     * @param Request     $request
+     *
+     * @param             $directory
+     *
+     * @return JsonResponse
+     */
+    public function renameOptimize( Application $app, Request $request, $directory )
+    {
+
+        // request variables to get from the posted data
+        $image           = $request->request->get('image');
+        $newImageName    = $request->request->get('newName');
+        $preserveOptions = $request->request->get('preserve');
+
+
+        // get bolts filepath - can be changed by the user
+        $filesPath = ( new FilePathHelper($app) )->boltFilesPath();
+
+        // append filespath to the front of the image we are using
+        $imageToOptimize = $filesPath . '/' . $image;
+
+
+        if ( $directory == 'index' ) {
+            $newImagePath = $filesPath . '/' . $newImageName;
+            $renamedImage = $newImageName;
+        } else {
+            $newImagePath = $filesPath . '/' . $directory . '/' . $newImageName;
+            $renamedImage = $directory . '/' . $newImageName;
+        }
+
+
+        // validate the tinypng/tinyjpg api key
+        $valid = $app[ 'tinypng.optimize' ]->tinypngValidate();
+
+
+        $optimized = [];
+
+        if ( $valid ) {
+            $app[ 'tinypng.optimize' ]->tryOptimization($imageToOptimize, $newImagePath, $preserveOptions);
+
+            $optimizedImageExt    = pathinfo($imageToOptimize, PATHINFO_EXTENSION);
+            $newImagePathWithExt  = $newImagePath . '.' . $optimizedImageExt;
+            $renamedWithExtension = $renamedImage . '.' . $optimizedImageExt;
+
+            $optimized[] = $this->normalizedResponse($app, $renamedWithExtension, $newImagePathWithExt);
+        }
+
+        return new JsonResponse($optimized);
+    }
 
 
     /**
@@ -371,7 +443,7 @@ class TinyPNGBackendController implements ControllerProviderInterface {
 	public function deleteImage( Application $app, Request $request )
 	{
 		$filesystem = $this->fsSetup( $app );
-		$image      = $request->get( 'image' );
+		$image      = $request->request->get( 'image' );
 
 		return new JsonResponse( $filesystem->delete( $image ), 200 );
 	}
@@ -421,6 +493,32 @@ class TinyPNGBackendController implements ControllerProviderInterface {
 
 		return round( $bytes, 2 ) . ' ' . $units[ $i ];
 	}
+
+
+    /**
+     * @param Application $app
+     * @param             $image
+     * @param             $imagePath
+     * @return array
+     */
+	public  function normalizedResponse(Application $app, $image, $imagePath)
+    {
+        $filesystem = $this->fsSetup( $app );
+        $imageWidthHeight = getimagesize( $imagePath );
+
+        return [
+
+            'filename'      => pathinfo($imagePath, PATHINFO_BASENAME),
+            'optimizedSize' => self::bytesToHuman($filesystem->getSize($image)),
+            'imageWidth'    => $imageWidthHeight[ 0 ],
+            'imageHeight'   => $imageWidthHeight[ 1 ],
+            'imagePath'     => $filesystem->getAdapter()->getMetadata($image)[ 'path' ],
+            'located'       => pathinfo($image, PATHINFO_DIRNAME),
+
+            'compressionCount' => $app[ 'tinypng.optimize' ]->getCompressionCount(),
+        ];
+
+    }
 
 
     /**
@@ -530,11 +628,20 @@ class TinyPNGBackendController implements ControllerProviderInterface {
 					return null;
 				}
 
-				$success[] = [
-					'name'             => $newName,
-					'optimizedSize'    => self::bytesToHuman( $filesystem->getSize( $newName ) ),
-					'compressionCount' => $app['tinypng.optimize']->getCompressionCount()
-				];
+                $imageWidthHeight = getimagesize( $boltFilesPath . '/' . $newName );
+                $width            = $imageWidthHeight[0];
+                $height           = $imageWidthHeight[1];
+
+                $fileNameOnly = pathinfo( $boltFilesPath . '/' . $newName );
+
+                $success[] = [
+                    'filename'         => $fileNameOnly[ 'basename' ],
+                    'imagePath'        => $newName,
+                    'imageWidth'       => $width,
+                    'imageHeight'      => $height,
+                    'optimizedSize'    => self::bytesToHuman($filesystem->getSize($newName)),
+                    'compressionCount' => $app[ 'tinypng.optimize' ]->getCompressionCount()
+                ];
 			}
 
 
