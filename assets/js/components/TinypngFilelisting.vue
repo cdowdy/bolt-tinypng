@@ -1,137 +1,163 @@
 <template>
     <form action="">
-    <table is="bolt-table" class="dashboardlisting">
-        <thead slot="thead">
-        <tr>
-        <th>
-            <input type="search" placeholder="Search Files" v-model="filteredFiles">
-            Files To Optimize
-        </th>
-        <th>&nbsp;</th>
-        <th>Size</th>
-        <th>Optimize</th>
-            <th>
-                <button type="button" class="btn btn-sm btn-primary"
-                        @click="toggleBatch" >
-                    Batch Optimize
-                </button>
-
-            </th>
-        </tr>
-        <tr v-show="batchVisible" >
-            <th colspan="4" >
-                Preserve Options
-
-                <label class="radio-inline tinypng-batch-options">
-                    <input type="radio" id="preserveNone" name="preserveOptions" value="none" checked>
-                    Default (none)
-                </label>
-                <label class="radio-inline tinypng-batch-options">
-                    <input type="radio" id="preserveCopyright" name="preserveOptions" value="copyright">
-                    Copyright
-                </label>
-                <label class="radio-inline tinypng-batch-options">
-                    <input type="radio" id="preserveCreation" name="preserveOptions" value="creation">
-                    Creation
-                </label>
-                <label class="radio-inline tinypng-batch-options">
-                    <input type="radio" id="preserveLocation" name="preserveOptions" value="location">
-                    Location
-                </label>
-
-                <label class="radio-inline tinypng-batch-options" for="selectAllBatch">
-                    <input id="selectAllBatch" type="checkbox" value="all" v-model="selectAllBatch"> Select All
-                </label>
-            </th>
-            <th>
-                <button type="button"
-                        class="btn btn-primary btn-sm">
-                    Do Optimization
-                </button>
-            </th>
-        </tr>
-        </thead>
-        <tbody slot="table-body">
-        <template v-if="fileList && Object.keys(fileList).length >= 1">
-            <tr is="tinypng-file"
-                v-for="(file, index) in filterFiles"
-                :key="file.filename"
-                class="tinyPNG-buttons"
-                :imagePath="file.imagePath"
-                :filename="file.filename"
-                :located="file.located"
-                :filesize=" file.filesize"
-                :image-width="file.imageWidth"
-                :image-height="file.imageHeight">
-
-                <template slot="extra-table-data">
-                    <td>
-                        <split-button :disabled=" isDisabled ">
-                            <bolt-button slot="button" type="button"
-                                         :disabled="isDisabled "
-                                         @click="optimizeImage(file.imagePath, index, 'none', $event)">
-                                Optimize Image
-                            </bolt-button>
-                            <li>
-                                <a @click.prevent="optimizeImage(file.imagePath, index, 'copyright', $event)"
-                                   class="tnypng-copy" href="#"
-                                   :data-imagePath="file.imagePath "
-                                   data-optiparam="copyright"
-                                   :data-tinypngpath="tinypngPath">Preserve Copyright
-                                </a>
-                            </li>
-                            <li>
-                                <a @click.prevent="optimizeImage(file.imagePath, index, 'creation', $event)"
-                                   class="tnypng-create" href="#"
-                                   :data-imagePath="file.imagePath "
-                                   data-optiparam="creation"
-                                   :data-tinypngpath="tinypngPath">Preserve Creation</a>
-                            </li>
-                            <li>
-                                <a @click.prevent="optimizeImage(file.imagePath, index, 'location', $event)"
-                                   class="tnypng-location" href="#"
-                                   :data-imagePath="file.imagePath "
-                                   data-optiparam="location"
-                                   :data-tinypngpath="tinypngPath">Preserve Location</a>
-                            </li>
-                            <li>
-                                <a @click.prevent="optimizeImage(file.imagePath, index, 'all', $event)"
-                                   class="tnypng-allthree"
-                                   href="#"
-                                   :data-imagePath="file.imagePath "
-                                   data-optiparam="all"
-                                   :data-tinypngpath="tinypngPath">Preserve All Three (3)</a>
-                            </li>
-                        </split-button>
-
-
-                        <bolt-button type="button" :disabled=" isDisabled ">
-                            Optimize &amp; Rename
-                        </bolt-button>
-                        <bolt-button :disabled=" isDisabled "
-                                     type="button"
-                                     variant="danger"
-                                     @click="deleteImage(file.imagePath, index, $event )">
-                            <i class="fa fa-trash" aria-hidden="true" slot="buttonIcon"></i>
-                            Delete Image
-                        </bolt-button>
-                    </td>
-                    <td>
-                        <label :for="file.filename" v-show="batchVisible">
-                            <input :name="file.filename" type="checkbox" :value="file.imagePath"
-                                   v-model="batchAllSelected">
-                        </label>
-                    </td>
-                </template>
-            </tr>
-        </template>
-        <template v-else>
+        <table is="bolt-table"
+               class="dashboardlisting table-hover">
+            <thead slot="thead">
             <tr>
-                <td>NO PNG/JPG Images In This Directory</td>
+                <th>
+                    <input type="search"
+                           placeholder="Search Files"
+                           v-model="filteredFiles">
+                    Files To Optimize
+                </th>
+                <th>&nbsp;</th>
+                <th>Size</th>
+                <th>Optimize</th>
+                <th>
+                    <button type="button"
+                            class="btn btn-sm btn-primary"
+                            @click="toggleBatch">
+                        Batch Optimize
+                    </button>
+                </th>
             </tr>
-        </template>
-        </tbody>
-    </table>
+            <tr v-show="batchVisible">
+                <th id="preserveHeading">
+                    Preserve Options
+                </th>
+                <th colspan="2">
+                    <ul class="list-inline list-unstyled"
+                        aria-labelledby="preserveHeading"
+                        role="radiogroup">
+                        <li>
+                            <label class="radio-inline tinypng-batch-options">
+                                <input type="radio"
+                                       id="preserveNone"
+                                       name="preserveOptions"
+                                       value="none"
+                                       v-model="batchPreserve"
+                                       checked>
+                                Default (none)
+                            </label>
+                        </li>
+                        <li>
+                            <label class="radio-inline tinypng-batch-options">
+                                <input type="radio"
+                                       id="preserveCopyright"
+                                       name="preserveOptions"
+                                       value="copyright"
+                                       v-model="batchPreserve">
+                                Copyright
+                            </label>
+                        </li>
+                        <li>
+                            <label class="radio-inline tinypng-batch-options">
+                                <input type="radio"
+                                       id="preserveCreation"
+                                       name="preserveOptions"
+                                       value="creation"
+                                       v-model="batchPreserve">
+                                Creation
+                            </label>
+                        </li>
+                        <li>
+                            <label class="radio-inline tinypng-batch-options">
+                                <input type="radio"
+                                       id="preserveLocation"
+                                       name="preserveOptions"
+                                       value="location"
+                                       v-model="batchPreserve">
+                                Location
+                            </label>
+                        </li>
+                    </ul>
+                </th>
+                <th colspan="">
+                    <label class="checkbox-inline tinypng-batch-options"
+                           for="selectAllBatch">
+                        <input id="selectAllBatch"
+                               type="checkbox"
+                               value="all"
+                               v-model="selectAllBatch">
+                        Select All
+                    </label>
+
+                </th>
+                <th>
+                    <button v-if="!batchWorking"
+                            type="button"
+                            class="btn btn-info btn-sm"
+                            :disabled="batchDisabled"
+                            @click="batchOptimize">
+                        Do Optimization
+                    </button>
+                    <svg v-if="batchWorking"
+                         class="bolt-spinner"
+                         viewBox="0 0 100 100">
+                        <use xlink:href="#bolt-spinner"/>
+                    </svg>
+                </th>
+            </tr>
+            </thead>
+            <tbody slot="table-body">
+            <template v-if="fileList && Object.keys(fileList).length >= 1">
+                <tr is="tinypng-file"
+                    v-for="(file, index) in filterFiles "
+                    :key="file.filename"
+                    class="tinyPNG-buttons"
+                    :imagePath="file.imagePath"
+                    :filename="file.filename"
+                    :located="file.located"
+                    :filesize=" file.filesize"
+                    :image-width="file.imageWidth"
+                    :image-height="file.imageHeight">
+
+                    <template slot="extra-table-data">
+                        <td>
+                            <tinypng-dropdown :disabled=" isDisabled "
+                                              :file="file"
+                                              :file-index="index"
+                                              @tinypng-optimize="optimizeImage">
+                            </tinypng-dropdown>
+
+                            <tinypng-rename :disabled="isDisabled"
+                                            :index="index"
+                                            :file="file"
+                                            :renamePath="tinypngRenamePath"
+                                            @tinypng-image-renamed="renameOptimizeImage">
+                            </tinypng-rename>
+
+                            <bolt-button :disabled=" isDisabled "
+                                         type="button"
+                                         variant="danger"
+                                         @click="deleteImage(file.imagePath, index )">
+                                <i class="fa fa-trash"
+                                   aria-hidden="true"
+                                   slot="buttonIcon">
+                                </i>
+                                Delete Image
+                            </bolt-button>
+                        </td>
+                        <td>
+                            <label :for="file.filename"
+                                   v-show="batchVisible">
+                                <input :name="file.filename"
+                                       type="checkbox"
+                                       :id="index"
+                                       :value="file.imagePath"
+                                       v-model="batchAllSelected">
+                            </label>
+                        </td>
+                    </template>
+                </tr>
+            </template>
+            <template v-else>
+                <tr>
+                    <td>NO PNG/JPG Images In This Directory</td>
+                </tr>
+            </template>
+            </tbody>
+        </table>
     </form>
 
 </template>
@@ -141,8 +167,10 @@
     import TinypngFile from './TinypngFile';
     import BoltButton from './Bolt/Button/BoltButton';
     import BoltButtongroup from './Bolt/Button/BoltButtonGroup';
-    import SplitButton from './Bolt/Button/SplitButton';
+    import TinypngDropdown from './buttons/TinypngDropdownButton';
+    import TinypngRename from './buttons/TinypngOptimizeRenameButton';
     import axios from 'axios';
+    import {Modal} from 'uiv';
 
     export default {
 
@@ -150,7 +178,8 @@
 
         components: {
             BoltTable, TinypngFile, BoltButton,
-            BoltButtongroup, SplitButton
+            BoltButtongroup, Modal, TinypngDropdown,
+            TinypngRename,
         },
 
         props: {
@@ -163,10 +192,20 @@
                 required: true
             },
 
+            tinypngBatchOptimize: {
+                type: String,
+                required: true
+            },
+
             tinypngDeletePath: {
                 type: String,
                 required: true
-            }
+            },
+
+            tinypngRenamePath: {
+                type: String,
+                required: true
+            },
         },
 
         data() {
@@ -176,6 +215,10 @@
 
                 batchVisible: false,
                 batchAllSelected: [],
+                batchPreserve: 'none',
+                batchWorking: false,
+
+
                 btnDisabled: false,
             }
         },
@@ -185,14 +228,28 @@
             toggleBatch: function () {
                 this.batchVisible = !this.batchVisible;
             },
-            
-            deleteImage: function (imageToDelete, index, event) {
-                let fileList = this.files;
 
-                let vm = this;
-                let button = event.target;
+            renameOptimizeImage: function (response) {
 
-                button.setAttribute('disabled', true );
+                response.data.forEach(object => {
+
+                    this.fileList.push({
+                        filename: object.filename,
+                        filesize: object.optimizedSize,
+                        imageHeight: object.imageHeight,
+                        imageWidth: object.imageWidth,
+                        imagePath: object.imagePath,
+                        located: object.located,
+                    });
+
+                    this.$emit('tinypng-image-optimized', response.data);
+                });
+            },
+
+            deleteImage: function (imageToDelete, index) {
+
+                this.btnDisabled = !this.btnDisabled;
+
                 axios.post(this.tinypngDeletePath, {
 
                     image: imageToDelete,
@@ -203,28 +260,31 @@
                     },
                     withCredentials: true,
                 })
-                    .then( response => {
-                        console.log( response );
-                        this.fileList.splice(index, 1);
-                        button.setAttribute('disabled', false );
+                    .then(response => {
+                        if (this.filteredFiles) {
+                            let i = this.fileList.map(item => item.imagePath).indexOf(imageToDelete);
+                            this.fileList.splice(i, 1);
+                            this.filteredFiles = '';
+                        } else {
+                            this.fileList.splice(index, 1);
+                        }
+
+                        this.btnDisabled = false;
+
                     })
                     .catch(function (error) {
                         console.log(imageToDelete);
-                        console.log(error.response);
+                        console.log(error);
                     });
             },
 
-            optimizeImage: function (imageToOptimize, index, toPreserve, event) {
-                let fileList = this.files;
+            optimizeImage: function (index, file, toPreserve) {
 
-                let vm = this;
-                let button = event.target;
                 this.btnDisabled = !this.btnDisabled;
-                //
+
                 axios.post(this.tinypngPath, {
 
-
-                    image: imageToOptimize,
+                    image: file,
                     preserve: toPreserve,
 
                     headers: {
@@ -233,14 +293,14 @@
                     },
                     withCredentials: true,
                 })
-                    .then( response => {
+                    .then(response => {
 
                         this.btnDisabled = false;
 
                         response.data.forEach(object => {
 
                             this.fileList.splice(index, 1, {
-                                filename: object.optimizedImage,
+                                filename: object.filename,
                                 filesize: object.optimizedSize,
                                 imageHeight: object.imageHeight,
                                 imageWidth: object.imageWidth,
@@ -248,34 +308,52 @@
                                 located: object.located,
                             });
                         });
-                        this.$emit( 'tinypng-image-optimized', response.data );
+                        this.$emit('tinypng-image-optimized', response.data);
 
 
                     })
                     .catch(function (error) {
-                        console.log(imageToOptimize);
-                        console.log(error.response);
+                        console.log(file);
+                        console.log(error);
                     });
-            }
+            },
 
-            
+            batchOptimize: function () {
+                this.batchWorking = true;
 
-            // push new file to our file list
-            // listen for this event from tinypngdropzone.vue 'tnydropzone-success'
-            // vm.$emit('tnydropzone-success', file, response, xhr )
-            // pushUploadedFile: function( file, response, xhr ) {
-            //     console.log('file: ' + file );
-            //     console.log( response );
-            // }
+                axios.post(this.tinypngBatchOptimize, {
+
+                    images: this.batchAllSelected,
+                    preserve: this.batchPreserve,
+
+                    headers: {
+                        Accept: 'application/json',
+                        'Content-Type': 'application/json',
+                    },
+                    withCredentials: true,
+                })
+                    .then(response => {
+
+                        this.batchVisible = false;
+                        this.batchWorking = false;
+                        this.batchAllSelected = [];
+                        this.fileList = response.data.fileList;
+                        this.$emit('tinypng-batch-optimized', response.data.compressionCount);
+
+                    })
+                    .catch(function (error) {
+                        console.log(error);
+                    });
+            },
         },
 
         computed: {
 
 
             filterFiles() {
-                let filter = new RegExp( this.filteredFiles, 'i' );
+                let filter = new RegExp(this.filteredFiles, 'i');
 
-                return this.fileList.filter( el => el.filename.match(filter));
+                return this.fileList.filter(el => el.filename.match(filter));
             },
 
             selectAllBatch: {
@@ -296,16 +374,16 @@
                 }
             },
 
+
             isDisabled() {
                 return this.batchVisible || this.btnDisabled;
+            },
+
+
+            batchDisabled() {
+                return Object.keys(this.batchAllSelected).length < 1;
+
             }
         },
-
-        // mounted: function () {
-        //     this.$nextTick(function () {
-        //
-        //         console.log(Object.keys(this.fileList).length );
-        //     })
-        // }
     }
 </script>
