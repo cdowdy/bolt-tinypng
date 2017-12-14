@@ -75,7 +75,7 @@ class TinyPNGOptimize
                     $preserved = $source->preserve( "creation" );
 
                 } elseif ( $dataToPreserve === 'copyright' ) {
-                    $preserved = $source->preserve( "creation" );
+                    $preserved = $source->preserve( "copyright" );
                 } else {
                     $preserved = $source->preserve( "location", "creation", "copyright" );
                 }
