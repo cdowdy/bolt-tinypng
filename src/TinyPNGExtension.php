@@ -36,10 +36,10 @@ class TinyPNGExtension extends SimpleExtension {
 				->setLate( true )
 				->setPriority( 99 )
 				->setZone( Zone::BACKEND ),
-			(new Javascript('dropzone.js') )
-				->setLate(true)
-				->setPriority(99)
-				->setZone( Zone::BACKEND ),
+//			(new Javascript('dropzone.js') )
+//				->setLate(true)
+//				->setPriority(99)
+//				->setZone( Zone::BACKEND ),
 			(new Stylesheet('tinypng.styles.css'))
 				->setPriority(99)
 				->setZone(Zone::BACKEND),
