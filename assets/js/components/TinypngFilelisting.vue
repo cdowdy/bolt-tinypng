@@ -5,10 +5,20 @@
             <thead slot="thead">
             <tr>
                 <th>
-                    <input type="search"
-                           placeholder="Search Files"
-                           v-model="filteredFiles">
-                    Files To Optimize
+                    <div class="form-group ">
+                        <label for="fileSearch"
+                               class="control-label">
+                            Files To Optimize
+                        </label>
+                        <input type="search"
+                               id="fileSearch"
+                               class="form-control"
+                               aria-describedby="fileSearchDescription"
+                               placeholder="Search Files"
+                               v-model="filteredFiles">
+                        <span class="sr-only"
+                              id="fileSearchDescription">Search for Files to optimize</span>
+                    </div>
                 </th>
                 <th>&nbsp;</th>
                 <th>Size</th>
@@ -264,7 +274,6 @@
                         if (this.filteredFiles) {
                             let i = this.fileList.map(item => item.imagePath).indexOf(imageToDelete);
                             this.fileList.splice(i, 1);
-                            this.filteredFiles = '';
                         } else {
                             this.fileList.splice(index, 1);
                         }
