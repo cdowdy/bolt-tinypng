@@ -308,6 +308,9 @@
 
                         response.data.forEach(object => {
 
+                            if (this.filteredFiles) {
+                                let index = this.fileList.map(item => item.imagePath).indexOf(file);
+                            }
                             this.fileList.splice(index, 1, {
                                 filename: object.filename,
                                 filesize: object.optimizedSize,
@@ -316,6 +319,7 @@
                                 imagePath: object.imagePath,
                                 located: object.located,
                             });
+
                         });
                         this.$emit('tinypng-image-optimized', response.data);
 

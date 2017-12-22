@@ -21,7 +21,7 @@
     "webpack": "^3.6.0"
   },
   "browserslist ": [
-    "ie 11",
+    "ie 10",
     "ChromeAndroid >= 4.4.4",
     "Chrome",
     "Firefox"
