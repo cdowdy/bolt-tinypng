@@ -1,5 +1,5 @@
 <template>
-    <div class="btn-group" :class="{ open: isVisible } ">
+    <div class="btn-group tinypng-button-group" :class="{ open: isVisible } ">
 
         <bolt-button type="button"
                      :disabled="disabled"

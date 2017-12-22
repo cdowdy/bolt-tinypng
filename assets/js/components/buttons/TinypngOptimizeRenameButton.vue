@@ -1,5 +1,5 @@
 <template>
-    <div class="btn-group">
+    <div class="btn-group tinypng-button-group">
         <bolt-button type="button"
                       @click="openModal = true "
                      :id="file.filename"

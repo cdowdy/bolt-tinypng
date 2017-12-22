@@ -140,4 +140,24 @@
     }
 }
 
+/*.tinypng-button-list {*/
+    /*list-style: none;*/
+    /*display: flex;*/
+    /*flex-flow: row wrap;*/
+    /*justify-content: space-between;*/
+/*}*/
+/*@media screen and (max-width: 969px){*/
+    /*.tinypng-button-list {*/
+        /*display: flex;*/
+        /*flex-direction: column;*/
+    /*}*/
+/*}*/
+
+@media screen and (max-width: 1143px){
+    .tinypng-button-group {
+        margin-bottom: 2.5rem;
+    }
+}
+
+
 
