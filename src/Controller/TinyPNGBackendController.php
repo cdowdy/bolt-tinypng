@@ -210,7 +210,12 @@ class TinyPNGBackendController implements ControllerProviderInterface {
         $filesystem   = $this->fsSetup($app);
         $urlGenerator = $app[ 'url_generator' ];
 
-        $files = [];
+        $files = [
+            [ 'path'         => 'Files',
+              'route'        => $urlGenerator->generate('tinypng-all-images'),
+              'subdirectory' => []
+            ]
+        ];
 
         foreach ( $fileList as $object ) {
             if ( $object[ 'type' ] == 'dir'
@@ -229,7 +234,8 @@ class TinyPNGBackendController implements ControllerProviderInterface {
 
         }
 
-        return $files;
+
+        return  $files;
 
     }
 
