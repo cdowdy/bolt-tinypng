@@ -277,7 +277,7 @@ class TinyPNGBackendController implements ControllerProviderInterface {
 		$filesystem    = $this->fsSetup( $app );
 
         $boltFilesPath = (new FilePathHelper( $app ) )->boltFilesPath() ;
-		$expectedMimes = $this->checkAccpetedTypes();
+		$expectedMimes = $this->checkAcceptedTypes();
 		$files         = [];
 
 		foreach ( $fileList as $object ) {
@@ -476,7 +476,7 @@ class TinyPNGBackendController implements ControllerProviderInterface {
 	/**
 	 * @return array
 	 */
-	protected function checkAccpetedTypes()
+	protected function checkAcceptedTypes()
 	{
 
 		return [ 'image/jpeg', 'image/png', 'image/gif' ];
