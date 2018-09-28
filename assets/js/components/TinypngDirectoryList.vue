@@ -25,8 +25,9 @@
                     </i>
                 </span>
             </th>
-            <th class="tinypng-table-header"
-                @click="sortBy('subdirectory')">
+            <th scope="col"
+                role="columnheader"
+            >
                 Subdirectory
             </th>
         </tr>
