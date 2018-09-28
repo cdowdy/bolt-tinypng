@@ -94,7 +94,6 @@
 
             return {
                 captionVisible: false,
-                sortDirection: 'asc',
 
                 sort: {
                     sortBy: 'path',
