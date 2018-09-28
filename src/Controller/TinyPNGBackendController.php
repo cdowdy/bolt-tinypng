@@ -256,7 +256,7 @@ class TinyPNGBackendController implements ControllerProviderInterface {
                 && !preg_match_all( '/.cache/i', $object[ 'basename' ] )
             ) {
                 $pathsList[] = [
-                    'path'  => $object[ 'path' ],
+                    'path'  => basename($object[ 'path' ]),
                     'route' => $urlGenerator->generate('tinypng-all-images', [ 'directory' => $object[ 'path' ] ])
                 ];
             }
