@@ -1,5 +1,5 @@
 <template>
-    <table class="dashboardlisting"
+    <table class="dashboardlisting table-hover"
            role="grid"
            aria-labelledby="directoryCaption"
            aria-readonly="true"
