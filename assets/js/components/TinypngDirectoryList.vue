@@ -51,6 +51,10 @@
 </template>
 
 <script>
+
+  import  orderBy from 'lodash/orderBy';
+
+
     export default {
 
         name: 'TinypngDirectorylist',
@@ -113,35 +117,43 @@
 
             sortedDirectories() {
 
-                if ( this.sort.activeDirection === 'ascending' ) {
+                let direction = 'asc';
 
-                    this.sortIcons.asc = true;
-                    this.sortIcons.desc = false;
-
-                    return this.directoriesList.sort( (a, b) => {
-                        let pathA = a.path.toLocaleLowerCase();
-                        let pathB = b.path.toLocaleLowerCase();
-
-                        return pathA.localeCompare(pathB);
-                    })
+                if (this.sort.activeDirection === 'descending' ) {
+                    direction = 'desc';
                 }
 
-                if ( this.sort.activeDirection === 'descending' ) {
+                return orderBy( this.directoriesList, [ this.sort.sortBy ], [ direction ] );
 
-                    this.sortIcons.asc = false;
-                    this.sortIcons.desc = true;
-
-
-                    return this.directoriesList.sort( (a, b) => {
-                        let pathA = a.path.toLocaleLowerCase();
-                        let pathB = b.path.toLocaleLowerCase();
-
-
-                        return pathB.localeCompare(pathA);
-                    })
-                }
-
-                return this.directoriesList;
+                // if ( this.sort.activeDirection === 'ascending' ) {
+                //
+                //     this.sortIcons.asc = true;
+                //     this.sortIcons.desc = false;
+                //
+                //     return this.directoriesList.sort( (a, b) => {
+                //         let pathA = a.path.toLocaleLowerCase();
+                //         let pathB = b.path.toLocaleLowerCase();
+                //
+                //         return pathA.localeCompare(pathB);
+                //     })
+                // }
+                //
+                // if ( this.sort.activeDirection === 'descending' ) {
+                //
+                //     this.sortIcons.asc = false;
+                //     this.sortIcons.desc = true;
+                //
+                //
+                //     return this.directoriesList.sort( (a, b) => {
+                //         let pathA = a.path.toLocaleLowerCase();
+                //         let pathB = b.path.toLocaleLowerCase();
+                //
+                //
+                //         return pathB.localeCompare(pathA);
+                //     })
+                // }
+                //
+                // return this.directoriesList;
             },
 
             // should refactor this to use props or data instead of returning the
