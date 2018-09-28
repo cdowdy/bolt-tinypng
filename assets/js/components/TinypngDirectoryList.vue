@@ -33,20 +33,35 @@
         </tr>
         </thead>
         <tbody>
-            <tr v-for="directory in sortedDirectories" role="row">
-                <td>
-                    <a :href="directory.route ">
-                        {{ directory.path }}
-                    </a>
-                </td>
-                <td>
-                    <p v-for="dir in directory.subdirectory" v-if="dir.path">
-                        <a :href="dir.route">
-                            {{ dir.path }}
-                        </a>
-                    </p>
-                </td>
-            </tr>
+           <template v-for="directory in sortedDirectories" >
+               <template v-if="directory.subdirectory.length < 1">
+                   <tr role="row">
+                       <td>
+                           <a :href="directory.route ">
+                               {{ directory.path }}
+                           </a>
+                       </td>
+                       <td></td>
+                   </tr>
+               </template>
+               <template v-else>
+                   <tr role="row"
+                       :rowspan="directory.subdirectory.length">
+                       <td>
+                           <a :href="directory.route ">
+                               {{ directory.path }}
+                           </a>
+                       </td>
+                       <td>
+                           <p v-for="dir in directory.subdirectory" v-if="dir.path">
+                               <a :href="dir.route">
+                                   {{ dir.path }}
+                               </a>
+                           </p>
+                       </td>
+                   </tr>
+               </template>
+           </template>
         </tbody>
     </table>
 </template>
@@ -126,35 +141,6 @@
 
                 return orderBy( this.directoriesList, [ this.sort.sortBy ], [ direction ] );
 
-                // if ( this.sort.activeDirection === 'ascending' ) {
-                //
-                //     this.sortIcons.asc = true;
-                //     this.sortIcons.desc = false;
-                //
-                //     return this.directoriesList.sort( (a, b) => {
-                //         let pathA = a.path.toLocaleLowerCase();
-                //         let pathB = b.path.toLocaleLowerCase();
-                //
-                //         return pathA.localeCompare(pathB);
-                //     })
-                // }
-                //
-                // if ( this.sort.activeDirection === 'descending' ) {
-                //
-                //     this.sortIcons.asc = false;
-                //     this.sortIcons.desc = true;
-                //
-                //
-                //     return this.directoriesList.sort( (a, b) => {
-                //         let pathA = a.path.toLocaleLowerCase();
-                //         let pathB = b.path.toLocaleLowerCase();
-                //
-                //
-                //         return pathB.localeCompare(pathA);
-                //     })
-                // }
-                //
-                // return this.directoriesList;
             },
 
             // should refactor this to use props or data instead of returning the
