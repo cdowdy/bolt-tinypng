@@ -84,41 +84,33 @@
         </div><!-- /.col-xs-12 upload conatainer -->
         <div class="col-xs-12">
 
-            <tabs>
-                <tab title="Files"
-                     selected="true">
-                    <tinypng-filelist
-                            :files="fileList"
-                            :tinypng-path="tinypngPath"
-                            :tinypngDeletePath="tinypngDeletePath"
-                            :tinypng-rename-path="tinypngRenamePath"
-                            :tinypng-batch-optimize="tinypngBatchOptimize"
-                            @tinypng-image-optimized="updateTinypngData"
-                            @tinypng-batch-optimized="updateCompressionCount">
-                    </tinypng-filelist>
-                </tab>
+            <!--<keep-alive>-->
+                <tabs>
+                    <tab title="Files"
+                         selected="true">
+                        <tinypng-filelist
+                                :files="fileList"
+                                :tinypng-path="tinypngPath"
+                                :tinypngDeletePath="tinypngDeletePath"
+                                :tinypng-rename-path="tinypngRenamePath"
+                                :tinypng-batch-optimize="tinypngBatchOptimize"
+                                @tinypng-image-optimized="updateTinypngData"
+                                @tinypng-batch-optimized="updateCompressionCount">
+                        </tinypng-filelist>
+                    </tab>
 
-                <tab title="Directories">
+                    <tab title="Directories">
 
-                    <table class="dashboardlisting">
-                        <thead>
-                        <tr>
-                            <th>Directories</th>
-                            <th>Sub Directories</th>
-                        </tr>
-                        </thead>
-                        <tbody is="tinypng-directory"
-                               :directories="tinypngDirectories"
-                               :pathAllImages="allImagesPath">
-                        </tbody>
-                    </table>
-
-                    <tinypng-newdir :directory=" currentDirectory"
-                                    :create-action-path="createDirectoryPath "
-                                    :delete-action-path="deleteDirectoryPath"
-                                    :directories="tinypngDirectories"></tinypng-newdir>
-                </tab>
-            </tabs>
+                        <tinypng-directory :directories="tinypngDirectories">
+                        </tinypng-directory>
+                        <tinypng-newdir :directory=" currentDirectory"
+                                        :create-action-path="createDirectoryPath "
+                                        :delete-action-path="deleteDirectoryPath"
+                                        :directories="tinypngDirectories">
+                        </tinypng-newdir>
+                    </tab>
+                </tabs>
+            <!--</keep-alive>-->
         </div>
     </div>
 </template>
@@ -262,7 +254,13 @@
             updateCompressionCount: function (response) {
                 this.compressions = response;
             },
+            
+
         },
+
+        computed: {
+
+        }
 
     }
 </script>

@@ -140,6 +140,27 @@
     }
 }
 
+#tinypng-dirlist-table .tinypng-table-header--button:focus,
+#tinypng-dirlist-table .tinypng-table-header--button:active,
+#tinypng-dirlist-table .tinypng-table-header--button:hover {
+    outline: #204460 solid 2px;
+    cursor: pointer;
+}
+
+/** need to override the specificity of bolts .dashboardlisting .th classes which set it @ 13px for font size
+
+ */
+#tinypng-dirlist-table .tinypng-table-header {
+    font-size: 16px;
+
+}
+
+#tinypng-dirlist-table .tinypng-table-header--button {
+    display: block;
+    width: 100%;
+    padding: .1875rem .625rem;
+}
+
 /*.tinypng-button-list {*/
     /*list-style: none;*/
     /*display: flex;*/

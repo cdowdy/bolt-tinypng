@@ -210,7 +210,12 @@ class TinyPNGBackendController implements ControllerProviderInterface {
         $filesystem   = $this->fsSetup($app);
         $urlGenerator = $app[ 'url_generator' ];
 
-        $files = [];
+        $files = [
+            [ 'path'         => 'Files',
+              'route'        => $urlGenerator->generate('tinypng-all-images'),
+              'subdirectory' => []
+            ]
+        ];
 
         foreach ( $fileList as $object ) {
             if ( $object[ 'type' ] == 'dir'
@@ -229,7 +234,8 @@ class TinyPNGBackendController implements ControllerProviderInterface {
 
         }
 
-        return $files;
+
+        return  $files;
 
     }
 
@@ -250,7 +256,7 @@ class TinyPNGBackendController implements ControllerProviderInterface {
                 && !preg_match_all( '/.cache/i', $object[ 'basename' ] )
             ) {
                 $pathsList[] = [
-                    'path'  => $object[ 'path' ],
+                    'path'  => basename($object[ 'path' ]),
                     'route' => $urlGenerator->generate('tinypng-all-images', [ 'directory' => $object[ 'path' ] ])
                 ];
             }
@@ -271,7 +277,7 @@ class TinyPNGBackendController implements ControllerProviderInterface {
 		$filesystem    = $this->fsSetup( $app );
 
         $boltFilesPath = (new FilePathHelper( $app ) )->boltFilesPath() ;
-		$expectedMimes = $this->checkAccpetedTypes();
+		$expectedMimes = $this->checkAcceptedTypes();
 		$files         = [];
 
 		foreach ( $fileList as $object ) {
@@ -470,7 +476,7 @@ class TinyPNGBackendController implements ControllerProviderInterface {
 	/**
 	 * @return array
 	 */
-	protected function checkAccpetedTypes()
+	protected function checkAcceptedTypes()
 	{
 
 		return [ 'image/jpeg', 'image/png', 'image/gif' ];
