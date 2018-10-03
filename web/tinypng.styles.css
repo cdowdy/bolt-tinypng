@@ -147,8 +147,8 @@
     cursor: pointer;
 }
 
-/**
- * need to override the specificity of bolts .dashboardlisting .th classes which set it @ 13px for font size
+/** need to override the specificity of bolts .dashboardlisting .th classes which set it @ 13px for font size
+
  */
 #tinypng-dirlist-table .tinypng-table-header {
     font-size: 16px;
