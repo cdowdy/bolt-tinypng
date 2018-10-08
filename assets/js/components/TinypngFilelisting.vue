@@ -110,6 +110,11 @@
             </tr>
             </thead>
             <tbody slot="table-body">
+            <template v-if="filterFiles.length < 1 ">
+                <tr>
+                    <td>NO PNG/JPG Images In This Directory</td>
+                </tr>
+            </template>
             <template v-if="fileList && Object.keys(fileList).length >= 1">
                 <tr is="tinypng-file"
                     v-for="(file, index) in filterFiles "
@@ -159,11 +164,6 @@
                             </label>
                         </td>
                     </template>
-                </tr>
-            </template>
-            <template v-else>
-                <tr>
-                    <td>NO PNG/JPG Images In This Directory</td>
                 </tr>
             </template>
             </tbody>
