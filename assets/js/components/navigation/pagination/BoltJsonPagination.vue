@@ -22,31 +22,31 @@
                 required: true,
             },
             navClass: {
-                type: array,
-                default: () => [ 'pagination']
+                type: Array,
+                default: () => [ ]
             },
             listClass: {
-                type: array,
-                default: () => []
+                type: Array,
+                default: () => ['pagination']
             },
             listItemClass: {
-                type: array,
+                type: Array,
                 default: () => []
             },
             anchorClass: {
-                type: array,
+                type: Array,
                 default: () => []
             },
             activeClass: {
-                type: array,
+                type: Array,
                 default: () => ['active']
             },
             activeText: {
-                type: array,
+                type: Array,
                 default: () => ['(current)']
             },
             disabledClass: {
-                type: array,
+                type: Array,
                 default: () => ['disabled']
             },
             previousLabel: {
@@ -74,7 +74,13 @@
                 type: Number,
                 required: false,
                 default: 20
-            }
+            },
+
+            maxVisibleButtons: {
+                type: Number,
+                required: false,
+                default: 3
+            },
         },
 
         data() {
@@ -95,7 +101,3 @@
         }
     }
 </script>
-
-<style scoped>
-
-</style>
